@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "838679366640",
+    "project_id": "medicationtracker-8ce68",
+    "storage_bucket": "medicationtracker-8ce68.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:838679366640:android:ff81899a1cdf702330ab35",
+        "android_client_info": {
+          "package_name": "com.app.medication_reminder_vscode"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBO7nuR5fI5ydWKe3kfMHA401XNPbGl7nM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

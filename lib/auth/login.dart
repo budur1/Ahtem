@@ -1,7 +1,3 @@
-// ignore_for_file: use_build_context_synchronously
-
-import 'dart:js';
-
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:awesome_dialog/awesome_dialog.dart';
@@ -13,6 +9,7 @@ class LoginScreen extends StatefulWidget {
   @override
   _LoginScreenState createState() => _LoginScreenState();
 }
+// signInWithGoogle fuction
 
 Future signInWithGoogle() async {
   // Trigger the authentication flow
@@ -27,10 +24,10 @@ Future signInWithGoogle() async {
     accessToken: googleAuth?.accessToken,
     idToken: googleAuth?.idToken,
   );
-
   // Once signed in, return the UserCredential
   await FirebaseAuth.instance.signInWithCredential(credential);
 
+  var context;
   Navigator.of(context as BuildContext)
       .pushNamedAndRemoveUntil("HomeScreen", (route) => false);
 }

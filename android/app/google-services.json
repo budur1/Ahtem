@@ -12,7 +12,20 @@
           "package_name": "com.app.medication_reminder_vscode"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "838679366640-uvbg3llio9fm74atv6ksj4sm0m00piir.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.app.medication_reminder_vscode",
+            "certificate_hash": "80bc652d49aca5480c00d89525d8397e65e194b2"
+          }
+        },
+        {
+          "client_id": "838679366640-6kdj2lsts6lqq1bupg1r91iktv7ci8mv.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyBO7nuR5fI5ydWKe3kfMHA401XNPbGl7nM"
@@ -20,7 +33,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "838679366640-6kdj2lsts6lqq1bupg1r91iktv7ci8mv.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "838679366640-nq64a5a8c55i0913b4urkvla1mf1sh32.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.medicationReminderVscode"
+              }
+            }
+          ]
         }
       }
     }

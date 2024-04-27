@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 class BuildContainer extends StatelessWidget {
@@ -11,30 +12,36 @@ class BuildContainer extends StatelessWidget {
 
 // Now public
 Widget buildContainer(
-    {required String imagePath, required String text, required Color color}) {
-  return Padding(
-    padding: const EdgeInsets.symmetric(horizontal: 14.0),
-    child: Container(
-      width: 129,
-      height: 163.01,
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(20.1),
-      ),
-      child: Column(
-        children: [
-          Image.asset(
-            imagePath,
-            height: 100,
-          ),
-          Text(
-            text,
-            style: const TextStyle(
-              fontSize: 13,
+    {required String imagePath,
+    required String text,
+    required Color color,
+    required VoidCallback onTap}) {
+  return GestureDetector(
+    onTap: onTap,
+    child: Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 14.0),
+      child: Container(
+        width: 129,
+        height: 163.01,
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(20.1),
+        ),
+        child: Column(
+          children: [
+            Image.asset(
+              imagePath,
+              height: 100,
             ),
-            textAlign: TextAlign.center,
-          ),
-        ],
+            Text(
+              text,
+              style: const TextStyle(
+                fontSize: 13,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
       ),
     ),
   );

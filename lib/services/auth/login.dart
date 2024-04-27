@@ -1,7 +1,9 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:awesome_dialog/awesome_dialog.dart';
-import 'package:google_sign_in/google_sign_in.dart';
+import 'package:medication_reminder_vscode/services/auth/controllers/user_controller.dart';
+import 'package:medication_reminder_vscode/services/auth/controllers/user_controller.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
@@ -9,44 +11,19 @@ class LoginScreen extends StatefulWidget {
   @override
   _LoginScreenState createState() => _LoginScreenState();
 }
-// signInWithGoogle fuction
-
-Future signInWithGoogle() async {
-  // Trigger the authentication flow
-  final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
-
-  // Obtain the auth details from the request
-  final GoogleSignInAuthentication? googleAuth =
-      await googleUser?.authentication;
-
-  // Create a new credential
-  final credential = GoogleAuthProvider.credential(
-    accessToken: googleAuth?.accessToken,
-    idToken: googleAuth?.idToken,
-  );
-  // Once signed in, return the UserCredential
-  await FirebaseAuth.instance.signInWithCredential(credential);
-
-  var context;
-  Navigator.of(context as BuildContext)
-      .pushNamedAndRemoveUntil("HomeScreen", (route) => false);
-}
 
 class _LoginScreenState extends State<LoginScreen> {
   TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
-
   bool _isPasswordVisible = false;
 
   bool isValidEmail(String email) {
-    // Regular expression for validating email addresses
     final RegExp regex = RegExp(
       r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
       caseSensitive: false,
       multiLine: false,
     );
-    // Check if the email matches the regular expression pattern
     return regex.hasMatch(email);
   }
 
@@ -130,17 +107,55 @@ class _LoginScreenState extends State<LoginScreen> {
                 },
               ),
               const SizedBox(height: 12),
-              TextButton(
-                onPressed: () {
-                  // Handle forgot password
-                },
-                child: const Text(
-                  'Forgot Password?',
-                  style: TextStyle(
-                    fontSize: 14.0,
-                    color: Colors.blue,
-                    fontWeight: FontWeight.bold,
-                    decoration: TextDecoration.underline,
+              Container(
+                margin: const EdgeInsets.only(top: 10, bottom: 10),
+                alignment: Alignment.topRight,
+                child: TextButton(
+                  onPressed: () async {
+                    if (emailController.text.isEmpty) {
+                      AwesomeDialog(
+                        context: context,
+                        dialogType: DialogType.warning,
+                        animType: AnimType.rightSlide,
+                        title: 'No worries!',
+                        desc:
+                            "Enter your email address and we will send you a link to reset your password.",
+                        btnOkOnPress: () {},
+                      ).show();
+                      return;
+                    }
+                    try {
+                      await FirebaseAuth.instance
+                          .sendPasswordResetEmail(email: emailController.text);
+                      AwesomeDialog(
+                        context: context,
+                        dialogType: DialogType.success,
+                        animType: AnimType.rightSlide,
+                        title: 'Check Your Email',
+                        desc:
+                            "Please check your inbox and follow the instruction to reset your password.",
+                        btnOkOnPress: () {},
+                      ).show();
+                    } catch (e) {
+                      print(e);
+                      AwesomeDialog(
+                        context: context,
+                        dialogType: DialogType.error,
+                        animType: AnimType.rightSlide,
+                        title: 'Invalid Email',
+                        desc: "Please enter a valid email address.",
+                        btnOkOnPress: () {},
+                      ).show();
+                    }
+                  },
+                  child: const Text(
+                    'Forgot Password?',
+                    style: TextStyle(
+                      fontSize: 14.0,
+                      color: Colors.blue,
+                      fontWeight: FontWeight.bold,
+                      decoration: TextDecoration.underline,
+                    ),
                   ),
                 ),
               ),
@@ -231,8 +246,32 @@ class _LoginScreenState extends State<LoginScreen> {
                       children: [
                         Expanded(
                           child: GestureDetector(
-                            onTap: () {
-                              signInWithGoogle();
+                            onTap: () async {
+                              try {
+                                final userController = UserController();
+                                final user =
+                                    await userController.signInWithGoogle();
+                                if (user != null && mounted) {
+                                  Navigator.of(context)
+                                      .pushReplacementNamed("/homepage");
+                                }
+                              } on FirebaseAuthException catch (error) {
+                                print(error.message);
+                                ScaffoldMessenger.of(context)
+                                    .showSnackBar(SnackBar(
+                                  content: Text(
+                                    error.message ?? "Something went wrong",
+                                  ),
+                                ));
+                              } catch (error) {
+                                print(error);
+                                ScaffoldMessenger.of(context)
+                                    .showSnackBar(SnackBar(
+                                  content: Text(
+                                    "An error occurred: ${error.toString()}",
+                                  ),
+                                ));
+                              }
                             },
                             child: Container(
                               height: 50,
@@ -254,9 +293,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                           ),
                         ),
-                        const SizedBox(
-                            width:
-                                16), // Adjust the spacing between the buttons
+                        const SizedBox(width: 16),
                         Expanded(
                           child: GestureDetector(
                             onTap: () {
@@ -276,7 +313,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 ],
                               ),
                               child: Image.asset(
-                                'assest/apple.png', // Check the file path
+                                'assest/apple.png',
                                 height: 30,
                               ),
                             ),

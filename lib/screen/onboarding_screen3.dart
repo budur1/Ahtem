@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:medication_reminder_vscode/auth/signup.dart';
+import 'package:medication_reminder_vscode/services/auth/signup.dart';
 import 'package:medication_reminder_vscode/widgets/button_blue.dart';
 
 class OnboardingScreen3 extends StatefulWidget {

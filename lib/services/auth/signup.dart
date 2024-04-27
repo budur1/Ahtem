@@ -1,8 +1,9 @@
-import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:provider/provider.dart';
 import 'package:awesome_dialog/awesome_dialog.dart';
-import 'package:medication_reminder_vscode/auth/login.dart';
-import 'package:medication_reminder_vscode/screen/home_screen.dart';
+import 'package:medication_reminder_vscode/services/auth/login.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({Key? key}) : super(key: key);
@@ -20,13 +21,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool _isPasswordVisible = false;
 
   bool isValidEmail(String email) {
-    // Regular expression for validating email addresses
     final RegExp regex = RegExp(
       r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
       caseSensitive: false,
       multiLine: false,
     );
-    // Check if the email matches the regular expression pattern
     return regex.hasMatch(email);
   }
 

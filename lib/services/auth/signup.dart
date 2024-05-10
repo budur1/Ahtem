@@ -162,11 +162,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     } on FirebaseAuthException catch (e) {
                       print('Authentication error: ${e.message}');
                       String errorMessage = 'An error occurred';
-                      if (e.code == 'user-not-found') {
-                        errorMessage = 'No user found for that email.';
-                      } else if (e.code == 'wrong-password') {
-                        errorMessage =
-                            'Incorrect password. Please check your password.';
+                      switch (e.code) {
+                        case 'email-already-in-use':
+                          errorMessage =
+                              'The email address is already in use by another account.';
+                          break;
+                        case 'weak-password':
+                          errorMessage = 'The password provided is too weak.';
+                          break;
+                        case 'invalid-email':
+                          errorMessage = 'The email address is invalid.';
+                          break;
+                        default:
+                          errorMessage =
+                              'An unexpected error occurred. Please try again later.';
                       }
                       AwesomeDialog(
                         context: context,
@@ -174,6 +183,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         animType: AnimType.rightSlide,
                         title: 'Authentication Error',
                         desc: errorMessage,
+                        btnCancelOnPress: () {},
+                        btnOkOnPress: () {},
+                      ).show();
+                    } catch (e) {
+                      print('Unknown error: $e');
+                      AwesomeDialog(
+                        context: context,
+                        dialogType: DialogType.error,
+                        animType: AnimType.rightSlide,
+                        title: 'Unknown Error',
+                        desc:
+                            'An unknown error occurred. Please try again later.',
                         btnCancelOnPress: () {},
                         btnOkOnPress: () {},
                       ).show();

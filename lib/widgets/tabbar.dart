@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:medication_reminder_vscode/screen/notification_screen.dart';
 
 class CustomTabBar extends StatefulWidget {
   final int currentIndex;
@@ -29,16 +30,22 @@ class _TabBarState extends State<CustomTabBar> {
       currentIndex: widget.currentIndex,
       onTap: (int newIndex) {
         switch (newIndex) {
+          case 3: // Assuming this is the index for notifications
+            Navigator.of(context).push(MaterialPageRoute(
+              builder: (_) => const NotificationScreen(), // No message provided
+            ));
+        }
+        switch (newIndex) {
           case 0:
-            Navigator.pushReplacementNamed(context, 'homepage');
+            Navigator.pushReplacementNamed(context, '/homepage');
             break;
 
           case 1:
-            Navigator.pushReplacementNamed(context, '/calendar');
+            Navigator.pushReplacementNamed(context, '/calander');
             break;
 
           case 2:
-            Navigator.pushReplacementNamed(context, 'progress');
+            Navigator.pushReplacementNamed(context, '/progress');
             break;
 
           case 3:
@@ -46,7 +53,7 @@ class _TabBarState extends State<CustomTabBar> {
             break;
 
           case 4:
-            Navigator.pushReplacementNamed(context, 'profile');
+            Navigator.pushReplacementNamed(context, '/profile');
             break;
 
           default:

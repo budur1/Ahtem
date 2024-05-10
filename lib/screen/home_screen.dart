@@ -1,10 +1,14 @@
+import 'package:awesome_dialog/awesome_dialog.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:medication_reminder_vscode/services/auth/controllers/user_controller.dart';
+import 'package:medication_reminder_vscode/services/permission_handler.dart';
 import 'package:medication_reminder_vscode/widgets/container_widget.dart';
 import 'package:medication_reminder_vscode/widgets/medication_card.dart';
+import 'package:medication_reminder_vscode/widgets/medication_entry.dart';
 import 'package:medication_reminder_vscode/widgets/tabbar.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -17,12 +21,72 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  Color getColorForTime(String time) {
+    switch (time) {
+      case 'Morning':
+        return const Color.fromRGBO(165, 226, 253, 1);
+      case 'Afternoon':
+        return const Color.fromRGBO(97, 84, 107, 1);
+      case 'Night':
+        return const Color.fromRGBO(255, 90, 77, 97);
+      case 'Evening':
+        return const Color.fromRGBO(30, 154, 198, 1);
+      default:
+        return Colors.black; // Default color
+    }
+  }
+
+  List<QueryDocumentSnapshot> data = [];
+//function to retreive the data from firestore << for today >>
+  getData() async {
+    try {
+      String userId = FirebaseAuth.instance.currentUser!.uid;
+      DateTime currentDate = DateTime.now();
+
+      QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+          .collection("users")
+          .doc(userId)
+          .collection("medications")
+          .where('startDate', isGreaterThanOrEqualTo: currentDate)
+          .get();
+
+      List<QueryDocumentSnapshot> filteredMedications = [];
+
+      querySnapshot.docs.forEach((doc) {
+        List<String> preferredTimes = List<String>.from(doc["preferredTimes"]);
+
+        // Filter medications to include only those with preferred times that are in the future or match the current time
+        if ((preferredTimes.contains("Morning") && currentDate.hour < 12) ||
+            (preferredTimes.contains("Afternoon") && currentDate.hour < 17) ||
+            (preferredTimes.contains("Evening") && currentDate.hour < 20) ||
+            (preferredTimes.contains("Night") && currentDate.hour < 23)) {
+          filteredMedications.add(doc);
+        }
+      });
+
+      setState(() {
+        data.addAll(filteredMedications);
+      });
+    } catch (error) {
+      AwesomeDialog(
+        context: context,
+        dialogType: DialogType.info,
+        animType: AnimType.rightSlide,
+        title: 'No worries!',
+        desc:
+            "An error occurred while fetching data. Please check your internet connection and try again later.",
+        btnOkOnPress: () {},
+      ).show();
+    }
+  }
+
   final _userController = UserController();
   String? _username = 'Mate!';
   int _currentIndex = 0;
 
   @override
   void initState() {
+    getData();
     super.initState();
     _fetchUsername();
   }
@@ -36,6 +100,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    floatingActionButton:
+    NotificationPermissionButton();
     return Scaffold(
         appBar: AppBar(
           // it is temprory just for test
@@ -76,21 +142,27 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   const SizedBox(width: 18), // Initial space
                   buildContainer(
-                    onTap: () {},
+                    onTap: () {
+                      Navigator.pushReplacementNamed(context, '/AddNewMed');
+                    },
                     imagePath: "assest/Add_pill_reminder.png",
                     text: "Add pill reminder",
                     color: const Color.fromRGBO(231, 220, 234, 0.75),
                   ),
                   const SizedBox(width: 18), // Space between containers
                   buildContainer(
-                    onTap: () {},
+                    onTap: () {
+                      Navigator.pushReplacementNamed(context, '/calander');
+                    },
                     imagePath: "assest/view_calendar.png",
                     text: "View calendar",
                     color: const Color.fromRGBO(233, 193, 196, 0.75),
                   ),
-                  const SizedBox(width: 18), // Space between containers
+                  const SizedBox(width: 18),
                   buildContainer(
-                    onTap: () {},
+                    onTap: () {
+                      Navigator.pushReplacementNamed(context, '/MedList');
+                    },
                     imagePath: "assest/Check_medication_list.png",
                     text: "Check medication list",
                     color: const Color.fromRGBO(115, 191, 206, 0.55),
@@ -123,22 +195,20 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
             Expanded(
-              child: ListView(
-                children: [
-                  MedicationContainer(
-                    medName: "Atorvastatin",
-                    dosage: "2 tablets",
-                    date: "Fri, 10 Nov 2023",
-                    time: "Afternoon",
-                  ),
-                  MedicationContainer(
-                    medName: "Lisinopril",
-                    dosage: "1 tablet",
-                    date: "Fri, 10 Nov 2023",
-                    time: "Evening",
-                  )
-                ],
-              ),
+              child: ListView.builder(
+                  itemCount: data.length,
+                  itemBuilder: (context, index) {
+                    return MedicationEntry(
+                      backgroundColor: const Color.fromARGB(255, 200, 206, 223),
+                      medicine: "${data[index]['name']}",
+                      dosage: "${data[index]['dosage']}",
+                      date: "${data[index]['daysOfWeek']}",
+                      time: "${data[index]['preferrefTimes']}",
+                      buttonColor:
+                          getColorForTime(data[index]['preferrefTimes']),
+                      buttonText: '${data[index]['preferrefTimes']}',
+                    );
+                  }),
             ),
           ],
         ),
@@ -146,7 +216,7 @@ class _HomeScreenState extends State<HomeScreen> {
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(50)),
           onPressed: () {
-            Navigator.of(context).pushReplacementNamed('/AddMedicationScreen');
+            Navigator.of(context).pushReplacementNamed('/AddNewMed');
           },
           backgroundColor: const Color.fromRGBO(239, 72, 132, 1),
           child: const Icon(

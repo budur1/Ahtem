@@ -7,11 +7,14 @@
 <!-- TODO Replace this value: -->
 <!-- Copied from GoogleService-Info.plist key CLIENT_ID -->
 <string>838679366640-nq64a5a8c55i0913b4urkvla1mf1sh32.apps.googleusercontent.com</string>
-
+<key>BGTaskSchedulerPermittedIdentifiers</key>
+<array>
+    <string>dev.flutter.background.refresh</string>
+</array>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Medication Reminder Vscode</string>
+	<string>Ahtem</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -68,5 +71,9 @@
 	</dict>
 </array>
 <!-- End of the Google Sign-in Section -->
+
+    <!-- Permission options for the `reminder` group -->
+    <key>NSRemindersUsageDescription</key>
+    <string>reminders</string>
 </dict>
 </plist>

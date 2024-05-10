@@ -1,31 +1,41 @@
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:medication_reminder_vscode/api/firebase_api.dart';
+import 'package:medication_reminder_vscode/api/notification_service.dart';
 import 'package:medication_reminder_vscode/screen/add_medication.dart';
-import 'package:medication_reminder_vscode/screen/medicationList_screen';
+import 'package:medication_reminder_vscode/screen/calander_screen.dart';
+
+import 'package:medication_reminder_vscode/screen/medicationlist_screen.dart';
 import 'package:medication_reminder_vscode/screen/notification_screen.dart';
+import 'package:medication_reminder_vscode/screen/progress_screen.dart';
 import 'package:medication_reminder_vscode/services/auth/login.dart';
 import 'package:medication_reminder_vscode/screen/home_screen.dart';
 import 'package:medication_reminder_vscode/screen/onboarding_screen1.dart';
 import 'package:medication_reminder_vscode/services/auth/signup.dart';
 import 'package:medication_reminder_vscode/screen/onboarding_screen2.dart';
 import 'package:medication_reminder_vscode/screen/onboarding_screen3.dart';
+import 'package:medication_reminder_vscode/services/local_notification.dart';
 import 'firebase_options.dart';
 
-// this helps to navigate btw different screens easilly
 final navigateKey = GlobalKey<NavigatorState>();
-Future<void> main() async {
+
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
-  await FirebaseApi()
-      .initNotifications(); // call the notification function to print the token in the console
-  runApp(
-    const MyApp(),
-  );
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  await LocalNotificationService().init(); // Initialize local notifications
+  FirebaseAnalytics analytics = FirebaseAnalytics.instance;
+  runApp(const MyApp());
+}
+
+void initializeNotifications(BuildContext context) {
+  NotificationService service = NotificationService();
+  service.requestPermission().then((_) {
+    service.subscribeToTopic();
+    service.setupInteractions(context);
+    service.getFCMToken();
+  });
 }
 
 class MyApp extends StatefulWidget {
@@ -57,32 +67,64 @@ class _MyAppState extends State<MyApp> {
         });
       }
     });
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      initializeNotifications(
+          context); // Initialize Firebase notifications after build
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const CircularProgressIndicator(); // or any loading widget
+      return const MaterialApp(home: HomeScreen());
+      //CircularProgressIndicator()); // Show loading indicator while waiting for authentication
     } else {
       return MaterialApp(
         debugShowCheckedModeBanner: false,
-        home: MedicationListScreen() //_determineFirstScreen(),
-        ,
-        routes: {
-          '/signup': (context) => const RegisterScreen(),
-          '/login': (context) => const LoginScreen(),
-          '/homepage': (context) => const HomeScreen(),
-          '/onboarding1': (context) => const OnboardingScreen1(),
-          '/onboarding2': (context) => const OnboardingScreen2(),
-          '/onboarding3': (context) => const OnboardingScreen3(),
-          '/NotificationScreen': (context) => const NotificationScreen(),
-          '/AddMedicationScreen': (context) => AddMedicationScreen(),
+        home: _determineFirstScreen(),
+        onGenerateRoute: (settings) {
+          // Dynamic route handling based on notification message
+          if (settings.name == '/NotificationScreen') {
+            final message = settings.arguments as RemoteMessage;
+            return MaterialPageRoute(
+              builder: (context) => NotificationScreen(message: message),
+            );
+          }
+
+          return MaterialPageRoute(builder: (context) {
+            switch (settings.name) {
+              case '/signup':
+                return const RegisterScreen();
+              case '/login':
+                return const LoginScreen();
+              case '/homepage':
+                return const HomeScreen();
+              case '/onboarding1':
+                return const OnboardingScreen1();
+              case '/onboarding2':
+                return const OnboardingScreen2();
+              case '/onboarding3':
+                return const OnboardingScreen3();
+              case '/AddNewMed':
+                return AddNewMedScreen();
+              case '/MedList':
+                return MedicationListScreen();
+              case '/calendar':
+                return DateandTimePicker();
+              case '/progress':
+                return ProgressScreen();
+              default:
+                return const HomeScreen();
+            }
+          });
         },
       );
     }
   }
 
   Widget _determineFirstScreen() {
+    // Determines the first screen based on user login and email verification status
     if (_isUserLoggedIn && _isEmailVerified) {
       return const HomeScreen();
     } else {

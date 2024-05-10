@@ -1,21 +1,28 @@
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 class NotificationEntry extends StatelessWidget {
-  const NotificationEntry({super.key});
+  final RemoteMessage? message; // Make the message nullable
+
+  const NotificationEntry({super.key, this.message}); // Remove 'required'
 
   @override
   Widget build(BuildContext context) {
-    return const ListTile(
-      // Text('${message.notification?.title}'),
+    // Provide default values if 'message' is null
+    return ListTile(
+      leading: const Icon(Icons.notifications),
+      title: Text(message?.notification?.title ?? 'Default title'),
       subtitle: Text(
-        'this is the body',
-        //${message.notification?.body}
-        style: TextStyle(color: Colors.black, fontSize: 14),
+        message?.notification?.body ?? 'No new notifications.',
+        style: const TextStyle(color: Colors.black, fontSize: 14),
       ),
       trailing: Text(
-        '12/3/2024',
-        //'${message.data}'
-        style: TextStyle(fontSize: 10, color: Color.fromRGBO(90, 91, 120, 1)),
+        message?.sentTime != null
+            ? DateFormat('MM/dd/yyyy').format(message!.sentTime!)
+            : 'No date',
+        style: const TextStyle(
+            fontSize: 10, color: Color.fromRGBO(90, 91, 120, 1)),
       ),
     );
   }

@@ -19,7 +19,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 version: 1.0.0+1
 
 environment:
-  sdk: '>=3.2.6 <4.0.0'
+  sdk: '>=3.3.4 <4.0.0'
 
 # Dependencies specify other packages that your package needs in order to work.
 # To automatically upgrade your package dependencies to the latest versions
@@ -48,10 +48,26 @@ dependencies:
   bloc: ^8.1.4
   flutter_bloc: ^8.1.5
   provider: ^6.1.2
+  flutter_local_notifications: ^17.1.0
+  flutter_timezone: ^1.0.8
+  percent_indicator: ^4.2.3
+  unique_simple_bar_chart: ^0.0.4
+  syncfusion_flutter_charts: ^25.1.42+1
+  workmanager: ^0.5.2
+  rxdart: ^0.27.7
+  permission_handler: ^11.3.1
+  firebase_analytics: ^10.10.5
+
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  flutter_launcher_icons: "^0.13.1"
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assest/Artboard 11024 1.png"
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is

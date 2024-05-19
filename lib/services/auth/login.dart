@@ -34,9 +34,7 @@ class _LoginScreenState extends State<LoginScreen> {
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_rounded, color: Colors.black),
-          onPressed: () {
-            // Navigate back to the previous screen
-          },
+          onPressed: () {},
         ),
       ),
       body: Padding(
@@ -287,7 +285,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 ],
                               ),
                               child: Image.asset(
-                                'assest/google.png', // Check the file path
+                                'assest/google.png',
                                 height: 30,
                               ),
                             ),
@@ -296,9 +294,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         const SizedBox(width: 16),
                         Expanded(
                           child: GestureDetector(
-                            onTap: () {
-                              // Handle Apple login
-                            },
+                            onTap: () {},
                             child: Container(
                               height: 50,
                               alignment: Alignment.center,

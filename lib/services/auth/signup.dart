@@ -1,7 +1,6 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:provider/provider.dart';
 import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:medication_reminder_vscode/services/auth/login.dart';
 
@@ -37,7 +36,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_rounded, color: Colors.black),
           onPressed: () {
-            Navigator.pushReplacementNamed(context, '/');
+            Navigator.pushReplacementNamed(context, '/onboarding1');
           },
         ),
       ),
@@ -157,7 +156,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       );
                       FirebaseAuth.instance.currentUser!
                           .sendEmailVerification();
-                      // Registration successful, navigate to home screen
+                      // Save user data to Firestore
+                      User? user = FirebaseAuth.instance.currentUser;
+                      await FirebaseFirestore.instance
+                          .collection('Users')
+                          .doc(user?.uid)
+                          .set({
+                        'name': nameController.text,
+                        'email': emailController.text,
+                      });
+
                       Navigator.pushReplacementNamed(context, "/login");
                     } on FirebaseAuthException catch (e) {
                       print('Authentication error: ${e.message}');

@@ -6,7 +6,6 @@ class OnboardingScreen3 extends StatefulWidget {
   const OnboardingScreen3({Key? key}) : super(key: key);
 
   @override
-  // ignore: library_private_types_in_public_api
   _OnboardingScreen3State createState() => _OnboardingScreen3State();
 }
 
@@ -93,7 +92,6 @@ class _OnboardingScreen3State extends State<OnboardingScreen3> {
                         padding: const EdgeInsets.all(16),
                         child: GestureDetector(
                           onTap: () {
-                            // Handle the onTap event, navigate to the login screen
                             Navigator.pushReplacementNamed(context, '/login');
                           },
                           child: RichText(
@@ -116,7 +114,6 @@ class _OnboardingScreen3State extends State<OnboardingScreen3> {
               ],
             ),
           ),
-          // Skip button
           Positioned(
             top: 40.0,
             right: 20.0,
@@ -133,7 +130,6 @@ class _OnboardingScreen3State extends State<OnboardingScreen3> {
               ),
             ),
           ),
-          // Next button
           Positioned(
             bottom: 30.0,
             right: 20.0,
@@ -147,8 +143,6 @@ class _OnboardingScreen3State extends State<OnboardingScreen3> {
               child: const Text('Next'),
             ),
           ),
-          // Page indicators
-          // Page indicators
           Positioned(
             left: 0,
             right: 0,

@@ -2,6 +2,8 @@ plugins {
     id 'com.android.application'
     id 'kotlin-android'
     id 'dev.flutter.flutter-gradle-plugin'
+  // Add the Google services Gradle plugin
+    id 'com.google.gms.google-services'
 }
 
 def localProperties = new Properties()
@@ -67,10 +69,18 @@ flutter {
 }
 
 dependencies {
+  
+    // Import the BoM for the Firebase platform
+    implementation(platform("com.google.firebase:firebase-bom:33.0.0"))
+
+    // Add the dependencies for the Firebase Cloud Messaging and Analytics libraries
+    // When using the BoM, you don't specify versions in Firebase library dependencies
+    implementation("com.google.firebase:firebase-messaging")
+    implementation("com.google.firebase:firebase-analytics")
+
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:1.2.2'
-    implementation 'com.google.firebase:firebase-messaging-ktx:24.0.0'
-    implementation 'com.android.support:multidex:2.0.1'
+//     implementation 'com.google.firebase:firebase-messaging-ktx:24.0.0'
+//     implementation 'com.android.support:multidex:2.0.1'
 }
-// At the very end of the android/app/build.gradle file
-apply plugin: 'com.google.gms.google-services'
+

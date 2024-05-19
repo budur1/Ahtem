@@ -1,15 +1,35 @@
+import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:flutter/material.dart';
-import 'package:medication_reminder_vscode/screen/upcoming_medlist_screen.dart';
+import 'package:intl/intl.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
-class DateandTimePicker extends StatefulWidget {
+import '../widgets/tabbar.dart';
+import 'upcoming_medlist_screen.dart';
+
+class CalendarScreen extends StatefulWidget {
   @override
-  _DateandTimePickerState createState() => _DateandTimePickerState();
+  _CalendarScreenState createState() => _CalendarScreenState();
 }
 
-class _DateandTimePickerState extends State<DateandTimePicker> {
+class _CalendarScreenState extends State<CalendarScreen> {
   DateTime _selectedDate = DateTime.now();
-  int _selectedIndex = 1; // Index of the "Calendar" icon
-  List<ReminderEntry> _reminders = []; // List to hold all reminders
+  int _currentIndex = 1;
+  List<Map<String, dynamic>> _reminders = [];
+
+  List<Color> backgroundColors = [
+    const Color.fromARGB(255, 200, 206, 223),
+    const Color.fromARGB(255, 242, 212, 217),
+    const Color.fromARGB(255, 211, 199, 216),
+    const Color.fromARGB(255, 166, 207, 215),
+    const Color.fromARGB(255, 226, 172, 194),
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _updateReminders();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,7 +52,7 @@ class _DateandTimePickerState extends State<DateandTimePicker> {
           child: Theme(
             data: Theme.of(context).copyWith(
               textTheme: Theme.of(context).textTheme.copyWith(
-                    headline6: TextStyle(fontSize: 20), // Adjust font size here
+                    headline6: TextStyle(fontSize: 20),
                   ),
             ),
             child: CalendarDatePicker(
@@ -64,9 +84,7 @@ class _DateandTimePickerState extends State<DateandTimePicker> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => UpcomingRemindersScreen(
-                      reminders: _reminders,
-                    ),
+                    builder: (context) => UpcomingRemindersScreen(),
                   ),
                 );
               },
@@ -79,109 +97,124 @@ class _DateandTimePickerState extends State<DateandTimePicker> {
           ],
         ),
         Expanded(
-          child: ListView(
-            children: _reminders,
+          child: ListView.builder(
+            itemCount: _reminders.length,
+            itemBuilder: (context, index) {
+              var reminder = _reminders[index];
+              return ReminderCard(
+                medicineName: reminder['name'],
+                dosage: "${reminder['dosage']} Times a Day",
+                reminderDate: formatTimestamp(reminder['startDate']),
+                isDone: reminder['isTaken'],
+                onToggleDone: (bool val) {
+                  _toggleIsTaken(index, val);
+                },
+                backgroundColor:
+                    backgroundColors[index % backgroundColors.length],
+              );
+            },
           ),
-        )
+        ),
       ]),
       bottomNavigationBar: CustomTabBar(
-        currentIndex: _selectedIndex,
-        onTap: (index) {
+        currentIndex: _currentIndex,
+        onTap: (int index) {
           setState(() {
-            _selectedIndex = index;
+            _currentIndex = index;
           });
-          _onItemTapped(index);
         },
       ),
     );
   }
 
-  void _onItemTapped(int index) {
-    // Implement navigation logic here if needed
+  String formatTimestamp(String timestamp) {
+    DateTime? dateTime = safeParseDate(timestamp);
+    if (dateTime != null) {
+      var formatter = DateFormat('dd MMM yyyy');
+      return formatter.format(dateTime);
+    }
+    return timestamp;
   }
 
-  // Method to filter reminders based on the selected date
-  void _updateReminders() {
-    // Assuming _reminders is a list of all reminders
-    List<ReminderEntry> filteredReminders = _reminders
-        .where((reminder) =>
-            reminder.date.contains(_selectedDate.toString().substring(0, 10)))
-        .toList();
-
+  void _updateReminders() async {
+    List<Map<String, dynamic>> reminders = await getDataForDate(_selectedDate);
     setState(() {
-      _reminders = filteredReminders;
+      _reminders = reminders;
     });
+    print("Reminders updated: $_reminders");
+  }
+
+  Future<List<Map<String, dynamic>>> getDataForDate(DateTime date) async {
+    try {
+      String userId = FirebaseAuth.instance.currentUser!.uid;
+      String formattedDate = "${date.year}-${date.month}-${date.day}";
+
+      QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+          .collection("Users")
+          .doc(userId)
+          .collection("Medications")
+          .where('startDate', isEqualTo: formattedDate)
+          .get();
+
+      var docs = querySnapshot.docs
+          .map((doc) => {
+                ...doc.data() as Map<String, dynamic>,
+                'id': doc.id,
+                'isTaken': doc['isTaken'] ?? false
+              })
+          .toList();
+
+      print("Data retrieved: $docs");
+
+      return docs;
+    } catch (error) {
+      print('Error when getting data for date: $error');
+      return [];
+    }
+  }
+
+  void _toggleIsTaken(int index, bool isTaken) async {
+    String userId = FirebaseAuth.instance.currentUser!.uid;
+    String docId = _reminders[index]['id'];
+
+    try {
+      await FirebaseFirestore.instance
+          .collection("Users")
+          .doc(userId)
+          .collection("Medications")
+          .doc(docId)
+          .update({'isTaken': isTaken});
+
+      setState(() {
+        _reminders[index]['isTaken'] = isTaken;
+      });
+    } catch (error) {
+      print('Error updating isTaken status: $error');
+      AwesomeDialog(
+        context: context,
+        dialogType: DialogType.info,
+        animType: AnimType.rightSlide,
+        title: 'No worries!',
+        desc:
+            "An error occurred while updating data. Please check your internet connection and try again later.",
+        btnOkOnPress: () {},
+      ).show();
+    }
   }
 }
 
-class CustomTabBar extends StatefulWidget {
-  final int currentIndex;
-  final Function(int) onTap;
-  const CustomTabBar({
-    Key? key,
-    required this.currentIndex,
-    required this.onTap,
-  }) : super(key: key);
-  @override
-  State<CustomTabBar> createState() => _TabBarState();
-}
-
-class _TabBarState extends State<CustomTabBar> {
-  @override
-  Widget build(BuildContext context) {
-    return BottomNavigationBar(
-      selectedFontSize: 12,
-      unselectedFontSize: 11,
-      type: BottomNavigationBarType.fixed,
-      selectedLabelStyle: const TextStyle(color: Colors.black),
-      fixedColor: const Color.fromRGBO(239, 72, 132, 1),
-      backgroundColor: Colors.grey[200],
-      showSelectedLabels: true,
-      showUnselectedLabels: true,
-      currentIndex: widget.currentIndex,
-      onTap: (int newIndex) {
-        switch (newIndex) {
-          case 0:
-            Navigator.pushReplacementNamed(context, 'homepage');
-            break;
-          case 1:
-            Navigator.pushReplacementNamed(context, '/calendar');
-            break;
-          case 2:
-            Navigator.pushReplacementNamed(context, '/progress');
-            break;
-          case 3:
-            Navigator.pushReplacementNamed(context, '/NotificationScreen');
-            break;
-          case 4:
-            Navigator.pushReplacementNamed(context, 'profile');
-            break;
-          default:
-            break;
-        }
-      },
-      items: const [
-        BottomNavigationBarItem(
-          label: 'Home',
-          icon: Icon(Icons.home),
-        ),
-        BottomNavigationBarItem(
-          label: 'Calendar',
-          icon: Icon(Icons.calendar_today),
-        ),
-        BottomNavigationBarItem(
-          label: 'Progress',
-          icon: Icon(Icons.pivot_table_chart),
-        ),
-        BottomNavigationBarItem(
-          label: 'Notification',
-          icon: Icon(Icons.notification_add),
-        ),
-        BottomNavigationBarItem(
-          label: 'Profile',
-          icon: Icon(Icons.person),
-        ),
-      ],
-    );
+DateTime? safeParseDate(String dateString) {
+  try {
+    List<String> parts = dateString.split('-');
+    if (parts.length == 3) {
+      String year = parts[0];
+      String month = parts[1].padLeft(2, '0');
+      String day = parts[2].padLeft(2, '0');
+      String formattedDate = '$year-$month-$day';
+      return DateTime.parse(formattedDate);
+    }
+  } catch (e) {
+    print("Error parsing date: $e for date string: $dateString");
   }
+  return null;
 }

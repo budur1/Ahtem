@@ -2,13 +2,10 @@ import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:medication_reminder_vscode/services/auth/controllers/user_controller.dart';
-import 'package:medication_reminder_vscode/services/permission_handler.dart';
 import 'package:medication_reminder_vscode/widgets/container_widget.dart';
 import 'package:medication_reminder_vscode/widgets/medication_card.dart';
-import 'package:medication_reminder_vscode/widgets/medication_entry.dart';
 import 'package:medication_reminder_vscode/widgets/tabbar.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -32,40 +29,45 @@ class _HomeScreenState extends State<HomeScreen> {
       case 'Evening':
         return const Color.fromRGBO(30, 154, 198, 1);
       default:
-        return Colors.black; // Default color
+        return Colors.black;
     }
   }
 
+  List<Color> backgroundColors = [
+    const Color.fromARGB(255, 200, 206, 223),
+    const Color.fromARGB(255, 242, 212, 217),
+    const Color.fromARGB(255, 211, 199, 216),
+    const Color.fromARGB(255, 166, 207, 215),
+    const Color.fromARGB(255, 226, 172, 194),
+  ];
+
+  final _userController = UserController();
+  String? _username = 'Mate!';
+  int _currentIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    getData();
+  }
+
   List<QueryDocumentSnapshot> data = [];
-//function to retreive the data from firestore << for today >>
-  getData() async {
+  Future<void> getData() async {
     try {
       String userId = FirebaseAuth.instance.currentUser!.uid;
       DateTime currentDate = DateTime.now();
+      String formattedDate =
+          "${currentDate.year}-${currentDate.month}-${currentDate.day}";
 
       QuerySnapshot querySnapshot = await FirebaseFirestore.instance
-          .collection("users")
+          .collection("Users")
           .doc(userId)
-          .collection("medications")
-          .where('startDate', isGreaterThanOrEqualTo: currentDate)
+          .collection("Medications")
+          .where('startDate', isEqualTo: formattedDate)
           .get();
 
-      List<QueryDocumentSnapshot> filteredMedications = [];
-
-      querySnapshot.docs.forEach((doc) {
-        List<String> preferredTimes = List<String>.from(doc["preferredTimes"]);
-
-        // Filter medications to include only those with preferred times that are in the future or match the current time
-        if ((preferredTimes.contains("Morning") && currentDate.hour < 12) ||
-            (preferredTimes.contains("Afternoon") && currentDate.hour < 17) ||
-            (preferredTimes.contains("Evening") && currentDate.hour < 20) ||
-            (preferredTimes.contains("Night") && currentDate.hour < 23)) {
-          filteredMedications.add(doc);
-        }
-      });
-
       setState(() {
-        data.addAll(filteredMedications);
+        data = querySnapshot.docs.toList();
       });
     } catch (error) {
       AwesomeDialog(
@@ -80,47 +82,38 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  final _userController = UserController();
-  String? _username = 'Mate!';
-  int _currentIndex = 0;
-
-  @override
-  void initState() {
-    getData();
-    super.initState();
-    _fetchUsername();
-  }
-
-  Future<void> _fetchUsername() async {
-    final username = await _userController.getUsername();
-    setState(() {
-      _username = username ?? '';
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
-    floatingActionButton:
-    NotificationPermissionButton();
+    String userId = FirebaseAuth.instance.currentUser!.uid;
+
     return Scaffold(
         appBar: AppBar(
-          // it is temprory just for test
-          leading: IconButton(
-            icon: const Icon(Icons.logout, color: Colors.black),
-            onPressed: () async {
-              GoogleSignIn googleSignIn = GoogleSignIn();
-              googleSignIn.disconnect();
-              await FirebaseAuth.instance.signOut();
-              Navigator.pushReplacementNamed(context, '/onboarding1');
-            },
-          ),
           centerTitle: false,
-          title: Text(
-            "Hello, $_username", //here we have to get the username
-            textAlign: TextAlign.left,
-            style: const TextStyle(
-              fontSize: 24,
-            ),
+          title: StreamBuilder<DocumentSnapshot>(
+            stream: FirebaseFirestore.instance
+                .collection('Users')
+                .doc(userId)
+                .snapshots(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return Text("Hello, $_username");
+              }
+              if (snapshot.hasError) {
+                return Text("Error");
+              }
+              if (snapshot.hasData) {
+                var userDocument = snapshot.data;
+                _username = userDocument?['name'];
+                return Text(
+                  "Hello, $_username",
+                  textAlign: TextAlign.left,
+                  style: const TextStyle(
+                    fontSize: 24,
+                  ),
+                );
+              }
+              return Text("Hello, $_username");
+            },
           ),
         ),
         body: Column(
@@ -130,7 +123,7 @@ class _HomeScreenState extends State<HomeScreen> {
             const Padding(
               padding: EdgeInsets.all(16),
               child: Text(
-                "what do you want to do?",
+                "What do you want to do?",
                 style: TextStyle(
                   fontSize: 20,
                 ),
@@ -152,7 +145,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   const SizedBox(width: 18), // Space between containers
                   buildContainer(
                     onTap: () {
-                      Navigator.pushReplacementNamed(context, '/calander');
+                      Navigator.pushReplacementNamed(context, '/calendar');
                     },
                     imagePath: "assest/view_calendar.png",
                     text: "View calendar",
@@ -170,7 +163,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
             ),
-            const Row(
+            Row(
               children: [
                 Padding(
                   padding: EdgeInsets.all(25.0),
@@ -184,31 +177,54 @@ class _HomeScreenState extends State<HomeScreen> {
                 Spacer(),
                 Padding(
                   padding: EdgeInsets.all(18),
-                  child: Text(
-                    "See All",
-                    style: TextStyle(
-                      color: Colors.black54,
-                      fontSize: 14,
+                  child: TextButton(
+                    onPressed: () {
+                      Navigator.pushReplacementNamed(context, "/upcoming");
+                    },
+                    style: TextButton.styleFrom(),
+                    child: Text(
+                      "See All",
+                      style: TextStyle(
+                        fontSize: 14,
+                      ),
                     ),
                   ),
-                ),
+                )
               ],
             ),
             Expanded(
               child: ListView.builder(
-                  itemCount: data.length,
-                  itemBuilder: (context, index) {
-                    return MedicationEntry(
-                      backgroundColor: const Color.fromARGB(255, 200, 206, 223),
-                      medicine: "${data[index]['name']}",
-                      dosage: "${data[index]['dosage']}",
-                      date: "${data[index]['daysOfWeek']}",
-                      time: "${data[index]['preferrefTimes']}",
-                      buttonColor:
-                          getColorForTime(data[index]['preferrefTimes']),
-                      buttonText: '${data[index]['preferrefTimes']}',
-                    );
-                  }),
+                itemCount: data.length,
+                itemBuilder: (context, index) {
+                  DocumentSnapshot doc = data[index];
+                  List<bool> daysList = List<bool>.from(doc['daysOfWeek']);
+                  List<String> dayNames = [
+                    'Sun',
+                    'Mon',
+                    'Tue',
+                    'Wed',
+                    'Thu',
+                    'Fri',
+                    'Sat'
+                  ];
+                  String daysFormatted = daysList
+                      .asMap()
+                      .entries
+                      .where((entry) => entry.value == true)
+                      .map((entry) => dayNames[entry.key])
+                      .join(", ");
+
+                  return MedicationContainer(
+                    medName: doc['name'],
+                    dosage: "${doc['dosage']} Times a Day",
+                    date: daysFormatted,
+                    time: doc['preferredTimes'],
+                    backgroundColor:
+                        backgroundColors[index % backgroundColors.length],
+                    buttonColor: getColorForTime(doc['preferredTimes']),
+                  );
+                },
+              ),
             ),
           ],
         ),

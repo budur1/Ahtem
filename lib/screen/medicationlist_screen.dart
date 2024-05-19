@@ -2,7 +2,9 @@ import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:medication_reminder_vscode/widgets/medication_entry.dart';
+
+import '../widgets/medication_card.dart';
+import '../widgets/tabbar.dart';
 
 class MedicationListScreen extends StatefulWidget {
   @override
@@ -10,6 +12,9 @@ class MedicationListScreen extends StatefulWidget {
 }
 
 class _MedicationListScreenState extends State<MedicationListScreen> {
+  int _currentIndex = 0;
+  List<Map<String, dynamic>> medications = [];
+
   Color getColorForTime(String time) {
     switch (time) {
       case 'Morning':
@@ -21,7 +26,7 @@ class _MedicationListScreenState extends State<MedicationListScreen> {
       case 'Evening':
         return const Color.fromRGBO(30, 154, 198, 1);
       default:
-        return Colors.black; // Default color
+        return Colors.black;
     }
   }
 
@@ -31,25 +36,28 @@ class _MedicationListScreenState extends State<MedicationListScreen> {
     const Color.fromARGB(255, 211, 199, 216),
     const Color.fromARGB(255, 166, 207, 215),
     const Color.fromARGB(255, 226, 172, 194),
-    // Add more colors as needed
   ];
 
   int colorIndex = 0;
 
-  List<QueryDocumentSnapshot> data = [];
-
-//function to retreive the data from firestore
+  // Function to retrieve the data from Firestore
   getData() async {
     try {
       String userId = FirebaseAuth.instance.currentUser!.uid;
       QuerySnapshot querySnapshot = await FirebaseFirestore.instance
-          .collection("users")
+          .collection("Users")
           .doc(userId)
-          .collection("medications")
+          .collection("Medications")
           .get();
 
-      data.addAll(querySnapshot.docs);
-      setState(() {});
+      setState(() {
+        medications = querySnapshot.docs
+            .map((doc) => {
+                  ...doc.data() as Map<String, dynamic>,
+                  'id': doc.id,
+                })
+            .toList();
+      });
     } catch (error) {
       AwesomeDialog(
         context: context,
@@ -60,6 +68,24 @@ class _MedicationListScreenState extends State<MedicationListScreen> {
             "An error occurred while fetching data. Please check your internet connection and try again later.",
         btnOkOnPress: () {},
       ).show();
+    }
+  }
+
+  Future<void> deleteMedication(String medicationId) async {
+    try {
+      String userId = FirebaseAuth.instance.currentUser!.uid;
+
+      await FirebaseFirestore.instance
+          .collection("Users")
+          .doc(userId)
+          .collection("Medications")
+          .doc(medicationId)
+          .delete();
+
+      // Refresh the list after deletion
+      getData();
+    } catch (error) {
+      print('Error deleting medication: $error');
     }
   }
 
@@ -77,40 +103,66 @@ class _MedicationListScreenState extends State<MedicationListScreen> {
           icon: const Icon(Icons.arrow_back),
           color: Colors.grey[600],
           onPressed: () {
-            // Handle back arrow press
+            Navigator.pushReplacementNamed(context, '/homepage');
           },
         ),
+        title: const Text('Medication List'),
       ),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Padding(
-            padding: EdgeInsets.all(16.0),
-            child: Text(
-              'Medication List',
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+      body: medications.isEmpty
+          ? Center(child: Text("No medications found."))
+          : ListView.builder(
+              itemCount: medications.length,
+              itemBuilder: (context, index) {
+                var medication = medications[index];
+                List<bool> daysList = List<bool>.from(medication['daysOfWeek']);
+                List<String> dayNames = [
+                  'Sun',
+                  'Mon',
+                  'Tue',
+                  'Wed',
+                  'Thu',
+                  'Fri',
+                  'Sat'
+                ];
+                String daysFormatted = daysList
+                    .asMap()
+                    .entries
+                    .where((entry) => entry.value == true)
+                    .map((entry) => dayNames[entry.key])
+                    .join(", ");
+
+                return Dismissible(
+                  key: Key(medication['id']),
+                  onDismissed: (direction) {
+                    deleteMedication(medication['id']);
+                    setState(() {
+                      medications.removeAt(index);
+                    });
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text("${medication['name']} deleted")),
+                    );
+                  },
+                  background: Container(color: Colors.red),
+                  child: MedicationContainer(
+                    medName: medication['name'],
+                    dosage: "${medication['dosage']} Times a Day",
+                    date: daysFormatted,
+                    time: medication['preferredTimes'],
+                    backgroundColor:
+                        backgroundColors[index % backgroundColors.length],
+                    buttonColor: getColorForTime(medication['preferredTimes']),
+                  ),
+                );
+              },
             ),
-          ),
-          Expanded(
-            child: ListView.builder(
-                itemCount: data.length,
-                itemBuilder: (context, index) {
-                  return MedicationEntry(
-                    backgroundColor: const Color.fromARGB(255, 200, 206, 223),
-                    medicine: "${data[index]['name']}",
-                    dosage: "${data[index]['dosage']}",
-                    date: "${data[index]['daysOfWeek']}",
-                    time: "${data[index]['preferrefTimes']}",
-                    buttonColor: getColorForTime(data[index]['preferrefTimes']),
-                    buttonText: '${data[index]['preferrefTimes']}',
-                  );
-                }),
-          ),
-        ],
+      bottomNavigationBar: CustomTabBar(
+        currentIndex: _currentIndex,
+        onTap: (int index) {
+          setState(() {
+            _currentIndex = index;
+          });
+        },
       ),
     );
   }
 }
-
-// this code was updated by budur, backgrooudcolor and getColorForTime list to enhance code functionality,
-// and to iltrate through each time the user add new medication.

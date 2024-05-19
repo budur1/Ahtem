@@ -5,7 +5,6 @@ class OnboardingScreen2 extends StatefulWidget {
   const OnboardingScreen2({Key? key}) : super(key: key);
 
   @override
-  // ignore: library_private_types_in_public_api
   _OnboardingScreen2State createState() => _OnboardingScreen2State();
 }
 
@@ -30,7 +29,6 @@ class _OnboardingScreen2State extends State<OnboardingScreen2> {
     return Scaffold(
       body: Stack(
         children: [
-          // Ensure that PageView is at the bottom of the stack
           Positioned.fill(
             child: PageView(
               controller: _pageController,
@@ -79,11 +77,9 @@ class _OnboardingScreen2State extends State<OnboardingScreen2> {
                     ),
                   ],
                 ),
-                // Add other onboarding screens here if needed
               ],
             ),
           ),
-          // Skip button
           Positioned(
             top: 40.0,
             right: 20.0,
@@ -100,7 +96,6 @@ class _OnboardingScreen2State extends State<OnboardingScreen2> {
               ),
             ),
           ),
-          // Next button
           Positioned(
             bottom: 30.0,
             right: 20.0,
@@ -114,8 +109,6 @@ class _OnboardingScreen2State extends State<OnboardingScreen2> {
               child: const Text('Next'),
             ),
           ),
-
-          // Page indicators
           Positioned(
             left: 0,
             right: 0,
@@ -123,7 +116,7 @@ class _OnboardingScreen2State extends State<OnboardingScreen2> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: List.generate(
-                3, //  you have 3 onboarding screens
+                3,
                 (index) => Container(
                   width: 10.0,
                   height: 10.0,

@@ -12,10 +12,10 @@ Ahtem is a medication tracker and notification app designed specifically for tee
 - User Profile Management: Allows users to set up and manage their profiles.
 
 ## Screenshots
-Include screenshots of your app. For example:
-![Home Screen](screenshots/Screenshot_home_screen.png)
-![Calendar](screenshots/Screenshot_calendar.png)
-![Progress Tracking](screenshots/Screenshot_progress_tracking.png)
+
+<img src="screenshots/home_screen.png" alt="Home Screen" width="300"/>
+<img src="screenshots/calendar.png" alt="Calendar" width="300"/>
+<img src="screenshots/progress_tracking.png" alt="Progress Tracking" width="300"/>
 
 ## Getting Started
 
@@ -65,5 +65,5 @@ Distributed under the MIT License. See `LICENSE` for more information.
 ## Contact
 Your Name - [ahtem.application@gmail.com](mailto:ahtem.application@gmail.com)
 
-Project Link: [https://github.com/your_username/ahtem](https://github.com/budur1/Ahtem)
+Project Link: [https://github.com/budur1/Ahtem](https://github.com/budur1/Ahtem)
 ```

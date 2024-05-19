@@ -13,9 +13,9 @@ Ahtem is a medication tracker and notification app designed specifically for tee
 
 ## Screenshots
 Include screenshots of your app. For example:
-![Home Screen](path/to/home_screen.png)
-![Calendar](path/to/calendar.png)
-![Progress Tracking](path/to/progress_tracking.png)
+![Home Screen](screenshots/Screenshot_home_screen.png)
+![Calendar](screenshots/Screenshot_calendar.png)
+![Progress Tracking](screenshots/Screenshot_progress_tracking.png)
 
 ## Getting Started
 
@@ -26,11 +26,11 @@ Include screenshots of your app. For example:
 ### Installation
 1. Clone the repository
    ```sh
-   git clone https://github.com/your_username/ahtem.git
+   git clone https://github.com/budur1/Ahtem
    ```
 2. Change to the project directory
    ```sh
-   cd ahtem
+   cd medication_reminder_vscode
    ```
 3. Install dependencies
    ```sh
@@ -63,7 +63,7 @@ Include screenshots of your app. For example:
 Distributed under the MIT License. See `LICENSE` for more information.
 
 ## Contact
-Your Name - [your.email@example.com](mailto:your.email@example.com)
+Your Name - [ahtem.application@gmail.com](mailto:ahtem.application@gmail.com)
 
-Project Link: [https://github.com/your_username/ahtem](https://github.com/your_username/ahtem)
+Project Link: [https://github.com/your_username/ahtem](https://github.com/budur1/Ahtem)
 ```

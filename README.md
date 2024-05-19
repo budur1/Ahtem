@@ -13,9 +13,9 @@ Ahtem is a medication tracker and notification app designed specifically for tee
 
 ## Screenshots
 
-<img src="screenshots/home_screen.png" alt="Home Screen" width="300"/>
-<img src="screenshots/calendar.png" alt="Calendar" width="300"/>
-<img src="screenshots/progress_tracking.png" alt="Progress Tracking" width="300"/>
+<img src="screenshots/Screenshot_home_screen.png" alt="Home Screen" width="300"/>
+<img src="screenshots/Screenshot_calendar.png" alt="Calendar" width="300"/>
+<img src="screenshots/Screenshot_progress_tracking.png" alt="Progress Tracking" width="300"/>
 
 ## Getting Started
 

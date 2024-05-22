@@ -69,6 +69,11 @@ class _NotificationScreenState extends State<NotificationScreen> {
                               onDismissed: (direction) {
                                 box.deleteAt(index);
                                 setState(() => notifications.removeAt(index));
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('Notification deleted'),
+                                  ),
+                                );
                               },
                               background: Container(color: Colors.red),
                               child: Card(
@@ -142,5 +147,10 @@ class _NotificationScreenState extends State<NotificationScreen> {
     var box = Hive.box('notificationBox');
     await box.clear();
     setState(() {});
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('All notifications deleted'),
+      ),
+    );
   }
 }

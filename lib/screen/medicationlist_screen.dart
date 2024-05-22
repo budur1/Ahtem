@@ -15,33 +15,28 @@ class _MedicationListScreenState extends State<MedicationListScreen> {
   int _currentIndex = 0;
   List<Map<String, dynamic>> medications = [];
 
-  Color getColorForTime(String time) {
-    switch (time) {
-      case 'Morning':
-        return const Color.fromRGBO(165, 226, 253, 1);
-      case 'Afternoon':
-        return const Color.fromRGBO(97, 84, 107, 1);
-      case 'Night':
-        return const Color.fromRGBO(255, 90, 77, 97);
-      case 'Evening':
-        return const Color.fromRGBO(30, 154, 198, 1);
-      default:
-        return Colors.black;
-    }
-  }
+  final Map<String, Color> timeColors = {
+    'Morning': Color.fromRGBO(165, 226, 253, 1),
+    'Afternoon': Color.fromRGBO(97, 84, 107, 1),
+    'Night': Color.fromRGBO(255, 90, 77, 97),
+    'Evening': Color.fromRGBO(30, 154, 198, 1),
+  };
 
   List<Color> backgroundColors = [
-    const Color.fromARGB(255, 200, 206, 223),
-    const Color.fromARGB(255, 242, 212, 217),
-    const Color.fromARGB(255, 211, 199, 216),
-    const Color.fromARGB(255, 166, 207, 215),
-    const Color.fromARGB(255, 226, 172, 194),
+    Color.fromARGB(255, 200, 206, 223),
+    Color.fromARGB(255, 242, 212, 217),
+    Color.fromARGB(255, 211, 199, 216),
+    Color.fromARGB(255, 166, 207, 215),
+    Color.fromARGB(255, 226, 172, 194),
   ];
 
-  int colorIndex = 0;
+  @override
+  void initState() {
+    super.initState();
+    getData();
+  }
 
-  // Function to retrieve the data from Firestore
-  getData() async {
+  Future<void> getData() async {
     try {
       String userId = FirebaseAuth.instance.currentUser!.uid;
       QuerySnapshot querySnapshot = await FirebaseFirestore.instance
@@ -64,8 +59,7 @@ class _MedicationListScreenState extends State<MedicationListScreen> {
         dialogType: DialogType.info,
         animType: AnimType.rightSlide,
         title: 'No worries!',
-        desc:
-            "An error occurred while fetching data. Please check your internet connection and try again later.",
+        desc: "An error occurred while fetching data. Please try again later.",
         btnOkOnPress: () {},
       ).show();
     }
@@ -87,12 +81,6 @@ class _MedicationListScreenState extends State<MedicationListScreen> {
     } catch (error) {
       print('Error deleting medication: $error');
     }
-  }
-
-  @override
-  void initState() {
-    getData();
-    super.initState();
   }
 
   @override
@@ -150,7 +138,8 @@ class _MedicationListScreenState extends State<MedicationListScreen> {
                     time: medication['preferredTimes'],
                     backgroundColor:
                         backgroundColors[index % backgroundColors.length],
-                    buttonColor: getColorForTime(medication['preferredTimes']),
+                    buttonColor: timeColors[medication['preferredTimes']] ??
+                        Colors.black,
                   ),
                 );
               },

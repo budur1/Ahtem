@@ -31,13 +31,16 @@ class HiveManager {
 
   /// Save notification data to Hive
   Future<void> saveNotification(
-      String title, String body, DateTime timestamp) async {
-    var box = await getBox('notificationBox');
-    await box.add({
+      String title, String body, DateTime scheduledDate) async {
+    int id = DateTime.now().millisecondsSinceEpoch.remainder(100000);
+    Hive.box('notificationBox').add({
+      'id': id,
       'title': title,
       'body': body,
-      'timestamp': timestamp.toString(),
+      'timestamp': scheduledDate.toIso8601String(),
     });
+    print(
+        "Notification saved with ID: $id, Title: $title, Body: $body, Date: $scheduledDate");
   }
 
   /// Close all open boxes - can be called when app is terminating

@@ -3,6 +3,7 @@ import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get_navigation/get_navigation.dart';
 import 'package:medication_reminder_vscode/widgets/tabbar.dart';
 
 class UpcomingRemindersScreen extends StatefulWidget {
@@ -16,39 +17,34 @@ class UpcomingRemindersScreen extends StatefulWidget {
 class _UpcomingRemindersScreenState extends State<UpcomingRemindersScreen> {
   int _currentIndex = 0;
   List<Color> backgroundColors = [
-    const Color.fromARGB(255, 200, 206, 223),
-    const Color.fromARGB(255, 242, 212, 217),
-    const Color.fromARGB(255, 211, 199, 216),
-    const Color.fromARGB(255, 166, 207, 215),
-    const Color.fromARGB(255, 226, 172, 194),
+    Color.fromARGB(255, 200, 206, 223),
+    Color.fromARGB(255, 242, 212, 217),
+    Color.fromARGB(255, 211, 199, 216),
+    Color.fromARGB(255, 166, 207, 215),
+    Color.fromARGB(255, 226, 172, 194),
   ];
 
   List<Map<String, dynamic>> data = [];
 
   @override
   void initState() {
-    getData();
     super.initState();
+    getData();
   }
 
-  getData() async {
+  Future<void> getData() async {
     try {
       String userId = FirebaseAuth.instance.currentUser!.uid;
-      DateTime currentDate = DateTime.now();
-      String formattedDate =
-          "${currentDate.year}-${currentDate.month}-${currentDate.day}";
 
       QuerySnapshot querySnapshot = await FirebaseFirestore.instance
           .collection("Users")
           .doc(userId)
           .collection("Medications")
-          .where('startDate', isEqualTo: formattedDate)
           .get();
 
       setState(() {
         data = querySnapshot.docs.map((doc) {
           var docData = doc.data() as Map<String, dynamic>;
-          // Ensure 'isTaken' field exists and default to false if not present
           docData['isTaken'] =
               docData.containsKey('isTaken') ? docData['isTaken'] : false;
           return {
@@ -58,14 +54,12 @@ class _UpcomingRemindersScreenState extends State<UpcomingRemindersScreen> {
         }).toList();
       });
     } catch (error) {
-      print('Error when getting upcoming data: $error');
       AwesomeDialog(
         context: context,
         dialogType: DialogType.info,
         animType: AnimType.rightSlide,
         title: 'No worries!',
-        desc:
-            "An error occurred while fetching data. Please check your internet connection and try again later.",
+        desc: "An error occurred while fetching data. Please try again later.",
         btnOkOnPress: () {},
       ).show();
     }
@@ -87,14 +81,12 @@ class _UpcomingRemindersScreenState extends State<UpcomingRemindersScreen> {
         data[index]['isTaken'] = isTaken;
       });
     } catch (error) {
-      print('Error updating isTaken status: $error');
       AwesomeDialog(
         context: context,
         dialogType: DialogType.info,
         animType: AnimType.rightSlide,
         title: 'No worries!',
-        desc:
-            "An error occurred while updating data. Please check your internet connection and try again later.",
+        desc: "An error occurred while updating data. Please try again later.",
         btnOkOnPress: () {},
       ).show();
     }
@@ -103,61 +95,66 @@ class _UpcomingRemindersScreenState extends State<UpcomingRemindersScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
-          leading: IconButton(
-            icon: Icon(Icons.arrow_back),
-            onPressed: () => Navigator.pop(context),
-          ),
-          title: Text('Upcoming Reminders'),
-        ),
-        body: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: ListView.builder(
-                  itemCount: data.length,
-                  itemBuilder: (context, index) {
-                    var doc = data[index];
-                    List<bool> daysList = List<bool>.from(doc['daysOfWeek']);
-                    List<String> dayNames = [
-                      'Sun',
-                      'Mon',
-                      'Tue',
-                      'Wed',
-                      'Thu',
-                      'Fri',
-                      'Sat'
-                    ];
-                    String daysFormatted = daysList
-                        .asMap()
-                        .entries
-                        .where((entry) => entry.value == true)
-                        .map((entry) => dayNames[entry.key])
-                        .join(", ");
-                    return ReminderCard(
-                      medicineName: doc['name'],
-                      dosage: "${doc['dosage']} Times a Day",
-                      reminderDate: daysFormatted,
-                      isDone: doc['isTaken'],
-                      onToggleDone: (bool val) {
-                        _toggleIsTaken(index, val);
-                      },
-                      backgroundColor:
-                          backgroundColors[index % backgroundColors.length],
-                    );
-                  },
-                ),
-              )
-            ]),
-        bottomNavigationBar: CustomTabBar(
-          currentIndex: _currentIndex,
-          onTap: (int index) {
-            setState(() {
-              _currentIndex = index;
-            });
+      appBar: AppBar(
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.pushReplacementNamed(context, '/homepage');
           },
-        ));
+        ),
+        title: Text('Upcoming Reminders'),
+      ),
+      body: Column(
+        mainAxisAlignment: MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: ListView.builder(
+              itemCount: data.length,
+              itemBuilder: (context, index) {
+                var doc = data[index];
+                List<bool> daysList = List<bool>.from(doc['daysOfWeek']);
+                List<String> dayNames = [
+                  'Sun',
+                  'Mon',
+                  'Tue',
+                  'Wed',
+                  'Thu',
+                  'Fri',
+                  'Sat'
+                ];
+                String daysFormatted = daysList
+                    .asMap()
+                    .entries
+                    .where((entry) => entry.value == true)
+                    .map((entry) => dayNames[entry.key])
+                    .join(", ");
+
+                return ReminderCard(
+                  medicineName: doc['name'],
+                  dosage: "${doc['dosage']} Times a Day",
+                  reminderDate: daysFormatted,
+                  isDone: doc['isTaken'],
+                  onToggleDone: (bool val) {
+                    _toggleIsTaken(index, val);
+                  },
+                  backgroundColor:
+                      backgroundColors[index % backgroundColors.length],
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+      bottomNavigationBar: CustomTabBar(
+        currentIndex: _currentIndex,
+        onTap: (int index) {
+          setState(() {
+            _currentIndex = index;
+          });
+        },
+      ),
+    );
   }
 }
 
@@ -196,7 +193,7 @@ class ReminderCard extends StatelessWidget {
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: isDone ? Colors.black : Colors.black,
+              color: Colors.black,
               decoration:
                   isDone ? TextDecoration.lineThrough : TextDecoration.none,
             ),

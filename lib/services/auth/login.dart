@@ -1,8 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:awesome_dialog/awesome_dialog.dart';
-import 'package:medication_reminder_vscode/services/auth/controllers/user_controller.dart';
 import 'package:medication_reminder_vscode/services/auth/controllers/user_controller.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -34,7 +32,9 @@ class _LoginScreenState extends State<LoginScreen> {
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_rounded, color: Colors.black),
-          onPressed: () {},
+          onPressed: () {
+            Navigator.pushReplacementNamed(context, '/onboarding1');
+          },
         ),
       ),
       body: Padding(
@@ -164,7 +164,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 onPressed: () async {
                   if (_formKey.currentState!.validate()) {
                     try {
-                      print("Attempting to sign in...");
                       final credential = await FirebaseAuth.instance
                           .signInWithEmailAndPassword(
                         email: emailController.text,
@@ -179,7 +178,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           animType: AnimType.rightSlide,
                           title: 'Verify your email',
                           desc:
-                              "A varification link has sent to your email account by clicking on the link",
+                              "A verification link has been sent to your email account. Please click on the link.",
                           btnCancelOnPress: () {},
                           btnOkOnPress: () {},
                         ).show();

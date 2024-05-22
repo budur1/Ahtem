@@ -1,12 +1,9 @@
 import 'dart:math';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
-
 import 'package:medication_reminder_vscode/services/local_notification.dart';
-
 import '../DataBase/hive.dart';
 
 void scheduleNotificationsFromFirestore() {
@@ -38,13 +35,13 @@ void scheduleNotificationsFromFirestore() {
 
       switch (scheduleType) {
         case 'At Regular Intervals':
-          scheduleRegularIntervals(doc.id.hashCode, data, startDate);
+          scheduleRegularIntervals(userId, doc.id.hashCode, data, startDate);
           break;
         case 'As Needed':
-          scheduleAsNeeded(doc.id.hashCode, data, startDate);
+          scheduleAsNeeded(userId, doc.id.hashCode, data, startDate);
           break;
         case 'On Specific Days of the week':
-          scheduleSpecificDaysOfWeek(doc.id.hashCode, data, startDate);
+          scheduleSpecificDaysOfWeek(userId, doc.id.hashCode, data, startDate);
           break;
         default:
           print("Unrecognized schedule type for ${data['name']}");
@@ -55,7 +52,7 @@ void scheduleNotificationsFromFirestore() {
 }
 
 void scheduleRegularIntervals(
-    int id, Map<String, dynamic> data, DateTime startDate) {
+    String userId, int id, Map<String, dynamic> data, DateTime startDate) {
   String name = data['name'];
   int intervalDays = data['intervalDays'] ?? 1;
   List<String> times = getPreferredTimes(data['preferredTimes']);
@@ -64,19 +61,20 @@ void scheduleRegularIntervals(
     TimeOfDay timeOfDay = getTimeOfDay(timeLabel);
     DateTime scheduledDate =
         getNextScheduledDateTime(startDate, timeOfDay, intervalDays);
-    int uniqueId = generateUniqueId(name, scheduledDate);
+    String uniqueId = generateUniqueNotificationId(userId, name, scheduledDate);
     String title = "Medication Reminder";
     String body = "It's time to take your $name.";
 
     NotificationService()
-        .showNotification(uniqueId, title, body, scheduledDate);
-    HiveManager().saveNotification(title, body, DateTime.now());
+        .showNotification(uniqueId.hashCode, title, body, scheduledDate);
+    HiveManager().saveNotification(title, body, scheduledDate);
     NotificationService.logScheduledNotifications();
     print("Scheduled Date and Time: ${scheduledDate.toIso8601String()}");
   }
 }
 
-void scheduleAsNeeded(int id, Map<String, dynamic> data, DateTime startDate) {
+void scheduleAsNeeded(
+    String userId, int id, Map<String, dynamic> data, DateTime startDate) {
   String name = data['name'];
   List<int> daysOfWeek = parseDaysOfWeek(data);
   List<String> times = getPreferredTimes(data['preferredTimes']);
@@ -92,44 +90,44 @@ void scheduleAsNeeded(int id, Map<String, dynamic> data, DateTime startDate) {
 
     scheduledDate = DateTime(scheduledDate.year, scheduledDate.month,
         scheduledDate.day, timeOfDay.hour, timeOfDay.minute);
-    int uniqueId = generateUniqueId(name, scheduledDate);
+    String uniqueId = generateUniqueNotificationId(userId, name, scheduledDate);
     String title = "Medication Reminder";
     String body = "It's time to take your $name.";
-    NotificationService()
-        .showNotification(uniqueId, title, body, scheduledDate);
 
-    HiveManager().saveNotification(title, body, DateTime.now());
+    NotificationService()
+        .showNotification(uniqueId.hashCode, title, body, scheduledDate);
+    HiveManager().saveNotification(title, body, scheduledDate);
     NotificationService.logScheduledNotifications();
     print("Scheduled Date and Time: ${scheduledDate.toIso8601String()}");
   }
 }
 
-void scheduleSpecificDaysOfWeek(
-    int id, Map<String, dynamic> data, DateTime startDate) {
-  String name = data['name'];
-  List<int> daysOfWeek = parseDaysOfWeek(data);
+// void scheduleSpecificDaysOfWeek(
+//     String userId, int id, Map<String, dynamic> data, DateTime startDate) {
+//   String name = data['name'];
+//   List<int> daysOfWeek = parseDaysOfWeek(data);
 
-  if (daysOfWeek.isEmpty) {
-    print("No days specified for scheduling for $name.");
-    return;
-  }
+//   if (daysOfWeek.isEmpty) {
+//     print("No days specified for scheduling for $name.");
+//     return;
+//   }
 
-  List<String> times = getPreferredTimes(data['preferredTimes']);
-  for (String timeLabel in times) {
-    TimeOfDay timeOfDay = getTimeOfDay(timeLabel);
-    DateTime scheduledDate = getNextScheduledDateTimeForSpecificDays(
-        startDate, timeOfDay, daysOfWeek);
-    int uniqueId = generateUniqueId(name, scheduledDate);
-    String title = "Medication Reminder";
-    String body = "It's time to take your $name.";
+//   List<String> times = getPreferredTimes(data['preferredTimes']);
+//   for (String timeLabel in times) {
+//     TimeOfDay timeOfDay = getTimeOfDay(timeLabel);
+//     DateTime scheduledDate = getNextScheduledDateTimeForSpecificDays(
+//         startDate, timeOfDay, daysOfWeek);
+//     String uniqueId = generateUniqueNotificationId(userId, name, scheduledDate);
+//     String title = "Medication Reminder";
+//     String body = "It's time to take your $name.";
 
-    NotificationService()
-        .showNotification(uniqueId, title, body, scheduledDate);
-    HiveManager().saveNotification(title, body, DateTime.now());
-    NotificationService.logScheduledNotifications();
-    print("Scheduled Date and Time: ${scheduledDate.toIso8601String()}");
-  }
-}
+//     NotificationService()
+//         .showNotification(uniqueId.hashCode, title, body, scheduledDate);
+//     HiveManager().saveNotification(title, body, scheduledDate);
+//     NotificationService.logScheduledNotifications();
+//     print("Scheduled Date and Time: ${scheduledDate.toIso8601String()}");
+//   }
+// }
 
 DateTime getNextScheduledDateTime(
     DateTime startDate, TimeOfDay timeOfDay, int intervalDays) {
@@ -141,35 +139,102 @@ DateTime getNextScheduledDateTime(
       timeOfDay.minute);
 }
 
+// DateTime getNextScheduledDateTimeForSpecificDays(
+//     DateTime startDate, TimeOfDay timeOfDay, List<int> daysOfWeek) {
+//   if (daysOfWeek.isEmpty) {
+//     throw Exception('No days of the week provided for scheduling.');
+//   }
+
+//   print("Days of the week: $daysOfWeek");
+
+//   DateTime now = DateTime.now();
+//   DateTime nextDate = DateTime(startDate.year, startDate.month, startDate.day,
+//       timeOfDay.hour, timeOfDay.minute);
+
+//   if (nextDate.isBefore(now)) {
+//     nextDate = now.add(Duration(minutes: 1));
+//   }
+
+//   int diffDays(int day) => (day - nextDate.weekday + 7) % 7;
+//   int minDays = daysOfWeek.map((day) => diffDays(day)).reduce(min);
+
+//   nextDate = nextDate.add(Duration(
+//       days: minDays == 0
+//           ? 7
+//           : minDays)); // Move to the next valid day or the same day next week
+
+//   if (nextDate.isBefore(now)) {
+//     throw Exception(
+//         "Calculated nextDate is in the past, which shouldn't happen.");
+//   }
+
+//   if (nextDate.year > 9999) {
+//     throw Exception('DateTime is outside the valid range.');
+//   }
+
+//   return nextDate;
+// }
+void scheduleSpecificDaysOfWeek(
+    String userId, int id, Map<String, dynamic> data, DateTime startDate) {
+  String name = data['name'];
+  List<int> daysOfWeek = parseDaysOfWeek(data);
+
+  if (daysOfWeek.isEmpty) {
+    print("No days specified for scheduling for $name.");
+    return;
+  }
+
+  List<String> times = getPreferredTimes(data['preferredTimes']);
+  for (String timeLabel in times) {
+    TimeOfDay timeOfDay = getTimeOfDay(timeLabel);
+    DateTime now = DateTime.now();
+
+    // Check if today is a valid day and time
+    if (daysOfWeek.contains(now.weekday)) {
+      DateTime todayScheduledDate = DateTime(
+          now.year, now.month, now.day, timeOfDay.hour, timeOfDay.minute);
+      if (todayScheduledDate.isAfter(now)) {
+        scheduleNotification(userId, name, todayScheduledDate);
+        continue; // Move to the next timeLabel as we scheduled for today
+      }
+    }
+
+    DateTime scheduledDate = getNextScheduledDateTimeForSpecificDays(
+        startDate, timeOfDay, daysOfWeek);
+    scheduleNotification(userId, name, scheduledDate);
+  }
+}
+
+void scheduleNotification(String userId, String name, DateTime scheduledDate) {
+  String uniqueId = generateUniqueNotificationId(userId, name, scheduledDate);
+  String title = "Medication Reminder";
+  String body = "It's time to take your $name.";
+
+  NotificationService()
+      .showNotification(uniqueId.hashCode, title, body, scheduledDate);
+  HiveManager().saveNotification(title, body, scheduledDate);
+  NotificationService.logScheduledNotifications();
+  print("Scheduled Date and Time: ${scheduledDate.toIso8601String()}");
+}
+
 DateTime getNextScheduledDateTimeForSpecificDays(
     DateTime startDate, TimeOfDay timeOfDay, List<int> daysOfWeek) {
   if (daysOfWeek.isEmpty) {
     throw Exception('No days of the week provided for scheduling.');
   }
 
-  // to check the days of the week being processed
   print("Days of the week: $daysOfWeek");
 
   DateTime now = DateTime.now();
-  DateTime nextDate = DateTime(startDate.year, startDate.month, startDate.day,
-      timeOfDay.hour, timeOfDay.minute);
-
-  // Ensure the nextDate starts at least one minute in the future if today's date is starting point
-  if (nextDate.isBefore(now)) {
-    nextDate = now.add(Duration(minutes: 1));
-  }
-
-  int diffDays(int day) => (day - nextDate.weekday + 7) % 7;
-  int minDays = daysOfWeek.map((day) => diffDays(day)).reduce(min);
-
-  nextDate = nextDate.add(Duration(
-      days: minDays == 0
-          ? 7
-          : minDays)); // Move to the next valid day or the same day next week
+  DateTime nextDate =
+      DateTime(now.year, now.month, now.day, timeOfDay.hour, timeOfDay.minute);
 
   if (nextDate.isBefore(now)) {
-    throw Exception(
-        "Calculated nextDate is in the past, which shouldn't happen.");
+    // Move to the next valid day if today has passed the scheduled time
+    int diffDays(int day) => (day - now.weekday + 7) % 7;
+    int minDays = daysOfWeek.map((day) => diffDays(day)).reduce(min);
+
+    nextDate = nextDate.add(Duration(days: minDays == 0 ? 7 : minDays));
   }
 
   if (nextDate.year > 9999) {
@@ -182,18 +247,17 @@ DateTime getNextScheduledDateTimeForSpecificDays(
 TimeOfDay getTimeOfDay(String timeLabel) {
   switch (timeLabel) {
     case 'Morning':
-      return TimeOfDay(hour: 9, minute: 0);
+      return TimeOfDay(hour: 2, minute: 45); // for testing
     case 'Afternoon':
       return TimeOfDay(hour: 12, minute: 0);
     case 'Evening':
       return TimeOfDay(hour: 19, minute: 0);
     default:
-      return TimeOfDay(hour: 8, minute: 0); // Default to morning if unspecified
+      return TimeOfDay(hour: 8, minute: 0);
   }
 }
 
 DateTime? safeParseDate(String dateString) {
-  // Attempt to handle dates without leading zeros
   try {
     List<String> parts = dateString.split('-');
     if (parts.length == 3) {
@@ -222,11 +286,9 @@ List<int> parseDaysOfWeek(Map<String, dynamic> data) {
   List<dynamic> daysOfWeek = data['daysOfWeek'];
   List<int> selectedDays = [];
 
-  // Check each day, if true, add the corresponding weekday number to selectedDays
   for (int i = 0; i < daysOfWeek.length; i++) {
     if (daysOfWeek[i] == true) {
-      // Convert index to day of the week, considering 0 as Sunday (Dart's DateTime uses 1 for Monday and 7 for Sunday)
-      int day = i + 1; // Adjust for Dart's DateTime weekday index
+      int day = i + 1;
       selectedDays.add(day);
     }
   }
@@ -239,18 +301,8 @@ List<int> parseDaysOfWeek(Map<String, dynamic> data) {
   return selectedDays;
 }
 
-// Future<void> testNotification() async {
-//   var now = DateTime.now();
-//   await NotificationService().showNotification(
-//     999,
-//     "Test Notification",
-//     "This is a test notification.",
-//     now.add(Duration(seconds: 10)), // Schedule for 10 seconds in the future
-//   );
-// }
-
-int generateUniqueId(String name, DateTime date) {
-  return '$name-${date.toIso8601String()}'.hashCode;
+int generateUniqueId(String userId, String name, DateTime date) {
+  return '$userId-$name-${date.toIso8601String()}'.hashCode;
 }
 
 void rescheduleNotifications() async {
@@ -258,10 +310,29 @@ void rescheduleNotifications() async {
   List notifications = box.values.toList();
 
   for (var notification in notifications) {
-    DateTime scheduledDate = DateTime.parse(notification['timestamp']);
-    if (scheduledDate.isAfter(DateTime.now())) {
-      await NotificationService().showNotification(notification['id'],
-          notification['title'], notification['body'], scheduledDate);
+    // Ensure all necessary fields are present and valid
+    if (notification['timestamp'] != null &&
+        notification['id'] != null &&
+        notification['title'] != null &&
+        notification['body'] != null) {
+      DateTime scheduledDate = DateTime.parse(notification['timestamp']);
+      if (scheduledDate.isAfter(DateTime.now())) {
+        int id = notification['id'];
+        String title = notification['title'];
+        String body = notification['body'];
+
+        // Print the original scheduled date before rescheduling
+        print(
+            "Original scheduled date for notification with ID: $id, Title: $title, Body: $body is: $scheduledDate");
+
+        print(
+            "Rescheduling notification with ID: $id, Title: $title, Body: $body, Date: $scheduledDate");
+        await NotificationService()
+            .showNotification(id, title, body, scheduledDate);
+      }
+    } else {
+      // Log or handle the case where a notification is missing necessary fields
+      print("Notification data incomplete or invalid: $notification");
     }
   }
 }

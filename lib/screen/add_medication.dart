@@ -773,8 +773,9 @@ class _AddNewMedScreen extends State<AddNewMedScreen> {
                 if (!isMedicationAdded &&
                     quantityInCabinet != 0 &&
                     ((seletedFrequency == 'At Regular Intervals') ||
-                        (seletedFrequency == 'On Specific Days of the week' &&
-                            selectedDaysText.isNotEmpty)) &&
+                        (seletedFrequency == 'On Specific Days of the week' ||
+                            seletedFrequency == 'As Needed' &&
+                                selectedDaysText.isNotEmpty)) &&
                     preferredTimes.isNotEmpty) {
                   setState(() {
                     isMedicationAdded = true;

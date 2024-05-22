@@ -1,7 +1,7 @@
-// progress_screen.dart
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 import 'package:unique_simple_bar_chart/data_models.dart';
@@ -40,22 +40,19 @@ class _ProgressScreenState extends State<ProgressScreen> {
 
   Future<void> _fetchUpcomingReminders() async {
     String userId = FirebaseAuth.instance.currentUser!.uid;
-    DateTime currentDate = DateTime.now();
-    String formattedDate =
-        "${currentDate.year}-${currentDate.month}-${currentDate.day}";
 
     QuerySnapshot querySnapshot = await FirebaseFirestore.instance
         .collection("Users")
         .doc(userId)
         .collection("Medications")
-        .where('startDate', isEqualTo: formattedDate)
         .get();
 
     setState(() {
       upcomingReminders = querySnapshot.docs
           .map((doc) => {
                 ...doc.data() as Map<String, dynamic>,
-                'isTaken': doc['isTaken'] ?? false
+                'isTaken': doc['isTaken'] ?? false,
+                'id': doc.id,
               })
           .toList();
     });
@@ -66,12 +63,12 @@ class _ProgressScreenState extends State<ProgressScreen> {
     String userId = FirebaseAuth.instance.currentUser!.uid;
 
     return Scaffold(
-      backgroundColor: Color.fromARGB(249, 255, 255, 255),
+      backgroundColor: const Color.fromARGB(249, 255, 255, 255),
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SizedBox(height: 21),
+            const SizedBox(height: 21),
             Padding(
               padding: const EdgeInsets.all(30.0),
               child: StreamBuilder<DocumentSnapshot>(
@@ -82,11 +79,11 @@ class _ProgressScreenState extends State<ProgressScreen> {
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return Text('Hello $_username',
-                        style: TextStyle(
+                        style: const TextStyle(
                             fontSize: 18, fontWeight: FontWeight.bold));
                   }
                   if (snapshot.hasError) {
-                    return Text('Error',
+                    return const Text('Error',
                         style: TextStyle(
                             fontSize: 18, fontWeight: FontWeight.bold));
                   }
@@ -94,12 +91,12 @@ class _ProgressScreenState extends State<ProgressScreen> {
                     var userDocument = snapshot.data;
                     _username = userDocument?['name'];
                     return Text('Hello $_username',
-                        style: TextStyle(
+                        style: const TextStyle(
                             fontSize: 18, fontWeight: FontWeight.bold));
                   }
                   return Text('Hello $_username',
-                      style:
-                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold));
+                      style: const TextStyle(
+                          fontSize: 18, fontWeight: FontWeight.bold));
                 },
               ),
             ),
@@ -112,11 +109,11 @@ class _ProgressScreenState extends State<ProgressScreen> {
                     Container(
                       height: 300,
                       width: 343.18,
-                      padding: EdgeInsets.all(10),
+                      padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(13.49),
-                        color: Color.fromARGB(255, 255, 255, 255),
-                        boxShadow: <BoxShadow>[
+                        color: const Color.fromARGB(255, 255, 255, 255),
+                        boxShadow: const [
                           BoxShadow(
                             color: Colors.black12,
                             blurRadius: 3,
@@ -126,27 +123,27 @@ class _ProgressScreenState extends State<ProgressScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          SizedBox(height: 1),
-                          Text(
+                          const SizedBox(height: 1),
+                          const Text(
                             'Track your progress over time',
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                          SizedBox(height: 1),
-                          Divider(height: 10),
-                          SizedBox(height: 1),
+                          const SizedBox(height: 1),
+                          const Divider(height: 10),
+                          const SizedBox(height: 1),
                           AspectRatio(
                             aspectRatio: 1.4,
                             child: SfCartesianChart(
-                              margin: EdgeInsets.all(9),
+                              margin: const EdgeInsets.all(9),
                               primaryXAxis: CategoryAxis(
-                                labelStyle: TextStyle(fontSize: 10),
+                                labelStyle: const TextStyle(fontSize: 10),
                               ),
                               primaryYAxis: NumericAxis(
                                 labelPosition: ChartDataLabelPosition.outside,
-                                labelStyle: TextStyle(
+                                labelStyle: const TextStyle(
                                   fontSize: 10,
                                   color: Colors.black,
                                 ),
@@ -154,7 +151,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
                                 maximum: 100,
                                 interval: 20,
                                 labelFormat: '{value}%',
-                                title: AxisTitle(
+                                title: const AxisTitle(
                                   text: 'Percentage of Doses Taken',
                                   textStyle: TextStyle(
                                     fontSize: 10,
@@ -174,7 +171,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
                                   yValueMapper: (SalesData sales, _) =>
                                       sales.sales,
                                   dataLabelSettings:
-                                      DataLabelSettings(isVisible: true),
+                                      const DataLabelSettings(isVisible: true),
                                 ),
                               ],
                             ),
@@ -186,26 +183,26 @@ class _ProgressScreenState extends State<ProgressScreen> {
                 ),
               ),
             ),
-            SizedBox(height: 15),
+            const SizedBox(height: 15),
             Padding(
               padding: const EdgeInsets.all(16),
               child: SimpleBarChartScreen(
                 upcomingReminders: upcomingReminders,
-                previousStatistics:
-                    previousStatistics, // Pass previous statistics here
+                previousStatistics: previousStatistics,
               ),
             ),
-            SizedBox(height: 3),
+            const SizedBox(height: 3),
             Center(
               child: Container(
                 height: 300,
                 width: 343.18,
-                padding: EdgeInsets.symmetric(vertical: 10, horizontal: 30),
-                margin: EdgeInsets.all(16),
+                padding:
+                    const EdgeInsets.symmetric(vertical: 10, horizontal: 30),
+                margin: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(13.14),
                   color: Colors.white,
-                  boxShadow: <BoxShadow>[
+                  boxShadow: const [
                     BoxShadow(
                       color: Colors.black12,
                       blurRadius: 3,
@@ -215,25 +212,25 @@ class _ProgressScreenState extends State<ProgressScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    SizedBox(height: 1),
+                    const SizedBox(height: 1),
                     Text(
-                      "Your Adherence Improved by ${_calculateAdherence()}%",
-                      style:
-                          TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                      "Your Adherence Improved by ${_calculateAdherence().toInt()}%",
+                      style: const TextStyle(
+                          fontSize: 12, fontWeight: FontWeight.bold),
                     ),
-                    Divider(height: 20),
-                    SizedBox(height: 1),
+                    const Divider(height: 20),
+                    const SizedBox(height: 1),
                     CircularPercentIndicator(
                       radius: 120,
                       lineWidth: 20,
                       percent: _calculateAdherence() / 100,
                       center: Text(
-                        "${_calculateAdherence()}%",
-                        style: TextStyle(
+                        "${_calculateAdherence().toInt()}%",
+                        style: const TextStyle(
                             fontSize: 40, fontWeight: FontWeight.bold),
                       ),
-                      progressColor: Color.fromARGB(255, 41, 55, 253),
-                      backgroundColor: Color.fromARGB(255, 230, 228, 228),
+                      progressColor: const Color.fromARGB(255, 41, 55, 253),
+                      backgroundColor: const Color.fromARGB(255, 230, 228, 228),
                       circularStrokeCap: CircularStrokeCap.round,
                     ),
                   ],
@@ -258,17 +255,23 @@ class _ProgressScreenState extends State<ProgressScreen> {
     Map<String, int> remindersTakenByMonth = {};
 
     for (var reminder in upcomingReminders) {
-      if (reminder['isTaken']) {
-        String month = reminder['name'].split(' ')[0];
-        remindersTakenByMonth[month] = (remindersTakenByMonth[month] ?? 0) + 1;
+      DateTime? date = safeParseDate(reminder['startDate']);
+      if (date != null) {
+        String month = DateFormat('MMM yyyy').format(date);
+
+        if (reminder['isTaken']) {
+          remindersTakenByMonth[month] =
+              (remindersTakenByMonth[month] ?? 0) + 1;
+        }
       }
     }
 
     List<SalesData> statistics = [];
     remindersTakenByMonth.forEach((month, takenCount) {
-      int totalCount = upcomingReminders
-          .where((reminder) => reminder['name'].startsWith(month))
-          .length;
+      int totalCount = upcomingReminders.where((reminder) {
+        DateTime? date = safeParseDate(reminder['startDate']);
+        return date != null && DateFormat('MMM yyyy').format(date) == month;
+      }).length;
       double percentage = totalCount == 0 ? 0 : (takenCount / totalCount) * 100;
       statistics.add(SalesData(month, percentage));
     });
@@ -282,7 +285,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
 
     int takenReminders =
         upcomingReminders.where((reminder) => reminder['isTaken']).length;
-    return (takenReminders / totalReminders) * 100;
+    return (takenReminders / totalReminders) * 100.toInt();
   }
 }
 
@@ -301,15 +304,15 @@ class SimpleBarChartScreen extends StatelessWidget {
     return Center(
       child: Column(
         children: [
-          SizedBox(height: 3),
+          const SizedBox(height: 3),
           Container(
             height: 300,
             width: 343.18,
-            padding: EdgeInsets.all(16),
+            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(13.49),
               color: Colors.white,
-              boxShadow: [
+              boxShadow: const [
                 BoxShadow(
                   color: Colors.black12,
                   blurRadius: 3,
@@ -322,7 +325,7 @@ class SimpleBarChartScreen extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    Text(
+                    const Text(
                       "Comparison of doses taken and missed",
                       style: TextStyle(
                           fontSize: 12.5, fontWeight: FontWeight.bold),
@@ -331,21 +334,21 @@ class SimpleBarChartScreen extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
                         _buildLegendBox(
-                          color: Color.fromARGB(255, 66, 78, 250),
+                          color: const Color.fromARGB(255, 66, 78, 250),
                           text: "Taken",
                         ),
-                        SizedBox(height: 2),
+                        const SizedBox(height: 2),
                         _buildLegendBox(
-                          color: Color.fromARGB(255, 213, 126, 253),
+                          color: const Color.fromARGB(255, 213, 126, 253),
                           text: "Missed",
                         ),
                       ],
                     ),
                   ],
                 ),
-                SizedBox(height: 1),
-                Divider(height: 10),
-                SizedBox(height: 1),
+                const SizedBox(height: 1),
+                const Divider(height: 10),
+                const SizedBox(height: 1),
                 SimpleBarChart(
                   makeItDouble: true,
                   listOfHorizontalBarData: _calculateReminderStatistics(),
@@ -361,29 +364,40 @@ class SimpleBarChartScreen extends StatelessWidget {
   }
 
   List<HorizontalDetailsModel> _calculateReminderStatistics() {
-    List<HorizontalDetailsModel> statistics = List.from(previousStatistics);
+    int totalTaken =
+        upcomingReminders.where((reminder) => reminder['isTaken']).length;
+    int totalMissed = upcomingReminders.length - totalTaken;
 
-    // Your calculation logic here for new statistics
+    List<HorizontalDetailsModel> statistics = [
+      HorizontalDetailsModel(
+          name: 'Taken',
+          color: const Color.fromARGB(255, 66, 78, 250),
+          size: totalTaken.toDouble()),
+      HorizontalDetailsModel(
+          name: 'Missed',
+          color: const Color.fromARGB(255, 213, 126, 253),
+          size: totalMissed.toDouble()),
+    ];
 
     return statistics;
   }
-}
 
-Widget _buildLegendBox({required Color color, required String text}) {
-  return Row(
-    children: [
-      CircleAvatar(
-        radius: 4.75,
-        backgroundColor: color,
-      ),
-      SizedBox(width: 4),
-      Text(
-        text,
-        style: TextStyle(fontSize: 9),
-      ),
-      SizedBox(width: 4),
-    ],
-  );
+  Widget _buildLegendBox({required Color color, required String text}) {
+    return Row(
+      children: [
+        CircleAvatar(
+          radius: 4.75,
+          backgroundColor: color,
+        ),
+        const SizedBox(width: 4),
+        Text(
+          text,
+          style: const TextStyle(fontSize: 9),
+        ),
+        const SizedBox(width: 4),
+      ],
+    );
+  }
 }
 
 class SalesData {
@@ -398,4 +412,20 @@ class Reminder {
   final bool isTaken;
 
   Reminder(this.name, this.isTaken);
+}
+
+DateTime? safeParseDate(String dateString) {
+  try {
+    List<String> parts = dateString.split('-');
+    if (parts.length == 3) {
+      String day = parts[0].padLeft(2, '0');
+      String month = parts[1].padLeft(2, '0');
+      String year = parts[2];
+      String formattedDate = '$year-$month-$day';
+      return DateTime.parse(formattedDate);
+    }
+  } catch (e) {
+    print("Error parsing date: $e for date string: $dateString");
+  }
+  return null;
 }

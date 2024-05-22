@@ -34,31 +34,31 @@ class _CalendarScreenState extends State<CalendarScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        centerTitle: false,
+        automaticallyImplyLeading: false,
+        title: const Text('Calendar'),
+      ),
       backgroundColor: Colors.white,
-      body: Column(children: [
-        Container(
-          padding: EdgeInsets.symmetric(vertical: 53, horizontal: 20),
-          margin: EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(15.0),
-            color: Colors.white,
-            boxShadow: <BoxShadow>[
-              BoxShadow(
-                color: Colors.black12,
-                blurRadius: 3,
-              )
-            ],
-          ),
-          child: Theme(
-            data: Theme.of(context).copyWith(
-              textTheme: Theme.of(context).textTheme.copyWith(
-                    headline6: TextStyle(fontSize: 20),
-                  ),
+      body: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: 53, horizontal: 20),
+            margin: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(15.0),
+              color: Colors.white,
+              boxShadow: const [
+                BoxShadow(
+                  color: Colors.black12,
+                  blurRadius: 3,
+                )
+              ],
             ),
             child: CalendarDatePicker(
               initialDate: DateTime.now(),
-              firstDate: DateTime(2000, 01, 01),
-              lastDate: DateTime(2030, 01, 01),
+              firstDate: DateTime(2000, 1, 1),
+              lastDate: DateTime(2030, 1, 1),
               onDateChanged: (date) {
                 setState(() {
                   _selectedDate = date;
@@ -67,55 +67,51 @@ class _CalendarScreenState extends State<CalendarScreen> {
               },
             ),
           ),
-          transformAlignment: Alignment.center,
-        ),
-        SizedBox(height: 50),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            Text(
-              "Your upcoming reminders",
-              textAlign: TextAlign.left,
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => UpcomingRemindersScreen(),
-                  ),
+          const SizedBox(height: 20),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              const Text(
+                "Your upcoming reminders",
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const UpcomingRemindersScreen(),
+                    ),
+                  );
+                },
+                child: const Text(
+                  "See All",
+                  style: TextStyle(fontSize: 14, color: Colors.grey),
+                ),
+              ),
+            ],
+          ),
+          Expanded(
+            child: ListView.builder(
+              itemCount: _reminders.length,
+              itemBuilder: (context, index) {
+                var reminder = _reminders[index];
+                return ReminderCard(
+                  medicineName: reminder['name'],
+                  dosage: "${reminder['dosage']} Times a Day",
+                  reminderDate: formatTimestamp(reminder['startDate']),
+                  isDone: reminder['isTaken'],
+                  onToggleDone: (bool val) {
+                    _toggleIsTaken(index, val);
+                  },
+                  backgroundColor:
+                      backgroundColors[index % backgroundColors.length],
                 );
               },
-              child: Text(
-                "See All",
-                textAlign: TextAlign.right,
-                style: TextStyle(fontSize: 13.54, color: Colors.grey),
-              ),
             ),
-          ],
-        ),
-        Expanded(
-          child: ListView.builder(
-            itemCount: _reminders.length,
-            itemBuilder: (context, index) {
-              var reminder = _reminders[index];
-              return ReminderCard(
-                medicineName: reminder['name'],
-                dosage: "${reminder['dosage']} Times a Day",
-                reminderDate: formatTimestamp(reminder['startDate']),
-                isDone: reminder['isTaken'],
-                onToggleDone: (bool val) {
-                  _toggleIsTaken(index, val);
-                },
-                backgroundColor:
-                    backgroundColors[index % backgroundColors.length],
-              );
-            },
           ),
-        ),
-      ]),
+        ],
+      ),
       bottomNavigationBar: CustomTabBar(
         currentIndex: _currentIndex,
         onTap: (int index) {
@@ -141,7 +137,6 @@ class _CalendarScreenState extends State<CalendarScreen> {
     setState(() {
       _reminders = reminders;
     });
-    print("Reminders updated: $_reminders");
   }
 
   Future<List<Map<String, dynamic>>> getDataForDate(DateTime date) async {
@@ -156,17 +151,13 @@ class _CalendarScreenState extends State<CalendarScreen> {
           .where('startDate', isEqualTo: formattedDate)
           .get();
 
-      var docs = querySnapshot.docs
+      return querySnapshot.docs
           .map((doc) => {
                 ...doc.data() as Map<String, dynamic>,
                 'id': doc.id,
                 'isTaken': doc['isTaken'] ?? false
               })
           .toList();
-
-      print("Data retrieved: $docs");
-
-      return docs;
     } catch (error) {
       print('Error when getting data for date: $error');
       return [];

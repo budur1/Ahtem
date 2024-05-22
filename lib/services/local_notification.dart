@@ -18,7 +18,6 @@ class NotificationService {
     initializeNotifications();
   }
 
-  /// Initializes the notification settings for both Android and iOS.
   Future<void> initializeNotifications() async {
     tz.initializeTimeZones();
     tz.setLocalLocation(tz.getLocation('Asia/Riyadh'));
@@ -38,14 +37,12 @@ class NotificationService {
       iOS: initializationSettingsIOS,
     );
 
-    // Initialize the local notification plugin
     await flutterLocalNotificationsPlugin.initialize(
       initializationSettings,
       onDidReceiveNotificationResponse: _handleNotificationResponse,
     );
   }
 
-  /// Handles actions when the user interacts with a notification.
   void _handleNotificationResponse(NotificationResponse response) {
     if (response.payload != null) {
       navigatorKey.currentState?.push(MaterialPageRoute(
@@ -54,15 +51,18 @@ class NotificationService {
     }
   }
 
-  /// Schedules a notification based on given parameters.
   Future<void> showNotification(
       int id, String title, String body, DateTime scheduledDate) async {
     try {
+      tz.TZDateTime tzScheduledDate =
+          tz.TZDateTime.from(scheduledDate, tz.getLocation('Asia/Riyadh'));
+      print(
+          "Scheduling notification with ID: $id, Title: $title, Body: $body, Scheduled Date: $scheduledDate (TZ: $tzScheduledDate)");
       await flutterLocalNotificationsPlugin.zonedSchedule(
         id,
         title,
         body,
-        tz.TZDateTime.from(scheduledDate, tz.getLocation('Asia/Riyadh')),
+        tzScheduledDate,
         const NotificationDetails(
           android: AndroidNotificationDetails(
             'medication_reminder',
@@ -70,19 +70,18 @@ class NotificationService {
             channelDescription: 'Channel for medication reminder notifications',
             importance: Importance.max,
             priority: Priority.high,
-            icon: '@mipmap/launcher_icon',
+            icon: '@mipmap/ic_launcher',
           ),
         ),
         uiLocalNotificationDateInterpretation:
             UILocalNotificationDateInterpretation.absoluteTime,
       );
-      print("Notification scheduled");
+      print("Notification scheduled successfully for $scheduledDate");
     } catch (e) {
       print('Failed to schedule notification: $e');
     }
   }
 
-  /// Cancels a scheduled notification by its ID.
   void cancelNotification(int id) {
     flutterLocalNotificationsPlugin.cancel(id);
   }
@@ -127,13 +126,13 @@ class NotificationService {
         uiLocalNotificationDateInterpretation:
             UILocalNotificationDateInterpretation.absoluteTime,
       );
-      // Save notification details to Hive
       Hive.box('notificationBox').add({
+        'id': id,
         'title': "Daily Lifestyle Tip",
         'body': body,
         'timestamp': scheduledDate.toIso8601String(),
       });
-      print("Lifestyle notification scheduled");
+      print("Lifestyle notification scheduled for $scheduledDate");
     } catch (e) {
       print('Failed to schedule lifestyle notification: $e');
     }
@@ -160,3 +159,10 @@ List<String> lifestyleMessages = [
 ];
 
 int currentMessageIndex = 0;
+
+String generateUniqueNotificationId(
+    String userId, String medicationName, DateTime date) {
+  return '$userId-$medicationName-${date.toIso8601String()}'
+      .hashCode
+      .toString();
+}

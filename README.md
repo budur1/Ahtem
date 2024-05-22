@@ -63,7 +63,7 @@ Ahtem is a medication tracker and notification app designed specifically for tee
 Distributed under the MIT License. See `LICENSE` for more information.
 
 ## Contact
-Your Name - [ahtem.application@gmail.com](mailto:ahtem.application@gmail.com)
+ [ahtem.application@gmail.com](mailto:ahtem.application@gmail.com)
 
 Project Link: [https://github.com/budur1/Ahtem](https://github.com/budur1/Ahtem)
 ```

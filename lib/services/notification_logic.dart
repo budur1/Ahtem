@@ -247,7 +247,7 @@ DateTime getNextScheduledDateTimeForSpecificDays(
 TimeOfDay getTimeOfDay(String timeLabel) {
   switch (timeLabel) {
     case 'Morning':
-      return TimeOfDay(hour: 2, minute: 45); // for testing
+      return TimeOfDay(hour: 9, minute: 0); // for testing
     case 'Afternoon':
       return TimeOfDay(hour: 12, minute: 0);
     case 'Evening':
